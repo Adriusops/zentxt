@@ -1,4 +1,4 @@
-CREATE TABLE versions (
+CREATE TABLE IF NOT EXISTS versions (
     id TEXT PRIMARY KEY, --UUID
     file_id TEXT REFERENCES files(id),
     version_number INTEGER NOT NULL,
