@@ -48,3 +48,26 @@ func SaveVersion(db *sql.DB, fileID string, path string, author string, message 
 		CreatedAt:     time.Now().Format(time.RFC3339),
 	}, nil
 }
+
+func ListVersions(db *sql.DB, fileID string) ([]*Version, error) {
+	rows, err := db.Query("SELECT id, file_id, version_number, path, author, message, content, created_at FROM versions WHERE file_id = ?", fileID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var versions []*Version
+	for rows.Next() {
+		version := &Version{}
+		err := rows.Scan(&version.ID, &version.FileID, &version.VersionNumber, &version.Path, &version.Author, &version.Message, &version.Content, &version.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, version)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return versions, nil
+}
