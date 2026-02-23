@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/Adriusops/zentxt/internal/api"
 	"github.com/Adriusops/zentxt/internal/storage"
 	"github.com/gofiber/fiber/v3"
 )
@@ -23,6 +25,9 @@ func main() {
 		// Send a string response to the client
 		return c.SendString("Hello, World 👋!")
 	})
+
+	api.SetupRoutes(app)
+	fmt.Println("Routes setup")
 
 	// Start the server on port 3000
 	log.Fatal(app.Listen(":3000"))
