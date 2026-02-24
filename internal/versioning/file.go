@@ -53,3 +53,12 @@ func ListFiles(db *sql.DB) ([]*File, error) {
 	}
 	return files, nil
 }
+
+func GetFile(db *sql.DB, id string) (*File, error) {
+	row := db.QueryRow("SELECT id, name, path, project_id, created_at FROM files WHERE id = ?", id)
+	var file File
+	if err := row.Scan(&file.ID, &file.Name, &file.Path, &file.ProjectID, &file.CreatedAt); err != nil {
+		return nil, err
+	}
+	return &file, nil
+}

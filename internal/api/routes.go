@@ -45,6 +45,15 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(file)
 	})
 
+	app.Get("/files/:id", func(c fiber.Ctx) error {
+		id := c.Params("id")
+		file, err := versioning.GetFile(db, id)
+		if err != nil {
+			return err
+		}
+		return c.JSON(file)
+	})
+
 	app.Post("/files/:id/versions", func(c fiber.Ctx) error {
 		var req SaveVersionRequest
 		if err := c.Bind().Body(&req); err != nil {
