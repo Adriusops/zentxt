@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Adriusops/zentxt/internal/api"
@@ -12,7 +11,7 @@ import (
 func main() {
 
 	// Initialize the database connection
-	_, err := storage.InitDB()
+	db, err := storage.InitDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,8 +25,7 @@ func main() {
 		return c.SendString("Hello, World 👋!")
 	})
 
-	api.SetupRoutes(app)
-	fmt.Println("Routes setup")
+	api.SetupRoutes(app, db)
 
 	// Start the server on port 3000
 	log.Fatal(app.Listen(":3000"))
