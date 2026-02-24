@@ -76,4 +76,13 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		}
 		return c.JSON(versions)
 	})
+
+	app.Get("/files/:id/versions/:version_id", func(c fiber.Ctx) error {
+		versionID := c.Params("version_id")
+		version, err := versioning.GetVersion(db, versionID)
+		if err != nil {
+			return err
+		}
+		return c.JSON(version)
+	})
 }

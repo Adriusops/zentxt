@@ -71,3 +71,12 @@ func ListVersions(db *sql.DB, fileID string) ([]*Version, error) {
 
 	return versions, nil
 }
+
+func GetVersion(db *sql.DB, id string) (*Version, error) {
+	row := db.QueryRow("SELECT id, file_id, version_number, path, author, message, content, created_at FROM versions WHERE id = ?", id)
+	var version Version
+	if err := row.Scan(&version.ID, &version.FileID, &version.VersionNumber, &version.Path, &version.Author, &version.Message, &version.Content, &version.CreatedAt); err != nil {
+		return nil, err
+	}
+	return &version, nil
+}
