@@ -21,6 +21,15 @@ type SaveVersionRequest struct {
 }
 
 func SetupRoutes(app fiber.Router, db *sql.DB) {
+
+	app.Get("/files", func(c fiber.Ctx) error {
+		files, err := versioning.ListFiles(db)
+		if err != nil {
+			return err
+		}
+		return c.JSON(files)
+	})
+
 	app.Post("/files", func(c fiber.Ctx) error {
 		// 1. Définir et lire le body
 		var req CreateFileRequest

@@ -32,3 +32,24 @@ func CreateFile(db *sql.DB, name string, path string, projectID *string) (*File,
 		CreatedAt: time.Now().Format(time.RFC3339),
 	}, nil
 }
+
+func ListFiles(db *sql.DB) ([]*File, error) {
+	rows, err := db.Query("SELECT id, name, path, project_id, created_at FROM files")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var files []*File
+	for rows.Next() {
+		var file File
+		if err := rows.Scan(&file.ID, &file.Name, &file.Path, &file.ProjectID, &file.CreatedAt); err != nil {
+			return nil, err
+		}
+		files = append(files, &file)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return files, nil
+}
