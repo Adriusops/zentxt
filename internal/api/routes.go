@@ -85,4 +85,22 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		}
 		return c.JSON(version)
 	})
+
+	app.Get("/files/:id/diff", func(c fiber.Ctx) error {
+		v1 := c.Query("v1")
+		v2 := c.Query("v2")
+
+		version1, err := versioning.GetVersion(db, v1)
+		if err != nil {
+			return err
+		}
+		version2, err := versioning.GetVersion(db, v2)
+		if err != nil {
+			return err
+		}
+
+		diff := versioning.GenerateDiff(version1.Content, version2.Content)
+
+		return c.JSON(diff)
+	})
 }
