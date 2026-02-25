@@ -2,6 +2,8 @@ package versioning
 
 import (
 	"database/sql"
+	"io"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -79,4 +81,39 @@ func GetVersion(db *sql.DB, id string) (*Version, error) {
 		return nil, err
 	}
 	return &version, nil
+}
+
+func RestoreVersion(db *sql.DB, fileID string, versionID string) (*Version, error) {
+	currentVersion, err := GetVersion(db, versionID)
+	if err != nil {
+		return nil, err
+	}
+
+	currentFile, err := GetFile(db, fileID)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.Exec("UPDATE files SET current_version_id = ? WHERE id = ?", currentVersion.ID, currentFile.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	src, err := os.Open(currentVersion.Path)
+	if err != nil {
+		return nil, err
+	}
+	defer src.Close()
+
+	dst, err := os.Create(currentFile.Path)
+	if err != nil {
+		return nil, err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return nil, err
+	}
+	return currentVersion, nil
 }

@@ -103,4 +103,16 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 
 		return c.JSON(diff)
 	})
+
+	app.Patch("/files/:id/restore/:versionID", func(c fiber.Ctx) error {
+		fileID := c.Params("id")
+		versionID := c.Params("versionID")
+
+		restoredVersion, err := versioning.RestoreVersion(db, fileID, versionID)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(restoredVersion)
+	})
 }
