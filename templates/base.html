@@ -1,0 +1,57 @@
+{{define "header"}}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{.Title}}</title>
+
+        <!-- Tailwind CSS via CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- HTMX -->
+        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="/css/style.css" />
+
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap");
+
+            body {
+                font-family:
+                    "Inter",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+            }
+        </style>
+    </head>
+    <body class="bg-white text-gray-900 antialiased">
+        <div class="min-h-screen">
+            <!-- Header -->
+            <header class="border-b border-gray-100">
+                <div class="max-w-5xl mx-auto px-6 py-6">
+                    <a
+                        href="/"
+                        class="inline-block hover:opacity-60 transition-opacity"
+                    >
+                        <img
+                            src="/images/logo_combo.svg"
+                            alt="ZenTxt"
+                            class="h-12"
+                        />
+                    </a>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="max-w-5xl mx-auto px-6 py-12">
+{{end}}
+
+{{define "footer"}}
+            </main>
+        </div>
+    </body>
+</html>
+{{end}}

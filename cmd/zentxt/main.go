@@ -6,6 +6,9 @@ import (
 	"github.com/Adriusops/zentxt/internal/api"
 	"github.com/Adriusops/zentxt/internal/storage"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/static"
+
+	"github.com/gofiber/template/html/v2"
 )
 
 func main() {
@@ -17,13 +20,15 @@ func main() {
 	}
 
 	// Initialize a new Fiber app
-	app := fiber.New()
-
-	// Define a route for the GET method on the root path '/'
-	app.Get("/", func(c fiber.Ctx) error {
-		// Send a string response to the client
-		return c.SendString("Hello, World 👋!")
+	engine := html.New("./templates", ".html")
+	engine.Reload(true)
+	engine.AddFunc("add", func(a, b int) int { return a + b })
+	engine.AddFunc("sub", func(a, b int) int { return a - b })
+	app := fiber.New(fiber.Config{
+		Views: engine,
 	})
+
+	app.Use(static.New("./static"))
 
 	api.SetupRoutes(app, db)
 

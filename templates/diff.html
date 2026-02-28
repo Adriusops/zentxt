@@ -1,0 +1,180 @@
+{{template "header" .}}
+
+<div class="space-y-8">
+    <!-- Header -->
+    <div>
+        <a href="/files/{{.file.ID}}" class="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center mb-2">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to timeline
+        </a>
+        <h1 class="text-3xl font-light text-[#232323] mb-2">Comparing versions</h1>
+        <p class="text-sm text-gray-400">{{.file.Name}}</p>
+    </div>
+
+    <!-- Version Info -->
+    <div class="grid grid-cols-2 gap-4">
+        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="inline-block px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded border border-gray-200">
+                    Before
+                </span>
+                <span class="text-sm font-medium text-[#232323]">{{.version1.Message}}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-400">
+                <span>{{.version1.Author}}</span>
+                <span>•</span>
+                <span>{{.version1.CreatedAt}}</span>
+            </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="inline-block px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded border border-gray-200">
+                    After
+                </span>
+                <span class="text-sm font-medium text-[#232323]">{{.version2.Message}}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-400">
+                <span>{{.version2.Author}}</span>
+                <span>•</span>
+                <span>{{.version2.CreatedAt}}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="flex items-center gap-2">
+        <button
+            id="unified-btn"
+            class="px-4 py-2 bg-[#232323] text-white rounded-lg text-sm font-medium transition-opacity">
+            Unified
+        </button>
+        <button
+            id="split-btn"
+            class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+            Side by side
+        </button>
+    </div>
+
+    <!-- Diff Content - Unified View -->
+    <div id="unified-view" class="border border-gray-200 rounded-xl overflow-hidden">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+            <span class="text-xs font-medium text-gray-600">Changes</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm font-mono">
+                <tbody>
+                    {{range .diff}}
+                    {{if eq .Type "equal"}}
+                    <tr class="hover:bg-gray-50">
+                        <td class="w-12 px-3 py-1 text-right text-gray-400 border-r border-gray-200 bg-gray-50 select-none"></td>
+                        <td class="px-4 py-1 text-gray-700">{{.Text}}</td>
+                    </tr>
+                    {{else if eq .Type "delete"}}
+                    <tr class="bg-red-50 hover:bg-red-100">
+                        <td class="w-12 px-3 py-1 text-right text-red-600 border-r border-red-200 bg-red-100 select-none font-medium">-</td>
+                        <td class="px-4 py-1 text-red-700">{{.Text}}</td>
+                    </tr>
+                    {{else if eq .Type "insert"}}
+                    <tr class="bg-green-50 hover:bg-green-100">
+                        <td class="w-12 px-3 py-1 text-right text-green-600 border-r border-green-200 bg-green-100 select-none font-medium">+</td>
+                        <td class="px-4 py-1 text-green-700">{{.Text}}</td>
+                    </tr>
+                    {{end}}
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Diff Content - Split View -->
+    <div id="split-view" class="hidden grid grid-cols-2 gap-4">
+        <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-xs font-medium text-gray-600">Before</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm font-mono">
+                    <tbody>
+                        {{range .diff}}
+                        {{if or (eq .Type "equal") (eq .Type "delete")}}
+                        <tr class="{{if eq .Type "delete"}}bg-red-50 hover:bg-red-100{{else}}hover:bg-gray-50{{end}}">
+                            <td class="w-12 px-3 py-1 text-right {{if eq .Type "delete"}}text-red-600 bg-red-100 border-r border-red-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type "delete"}}font-medium{{end}}">
+                                {{if eq .Type "delete"}}-{{end}}
+                            </td>
+                            <td class="px-4 py-1 {{if eq .Type "delete"}}text-red-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
+                        </tr>
+                        {{else}}
+                        <tr class="bg-gray-100">
+                            <td class="w-12 px-3 py-1 bg-gray-200 border-r border-gray-300"></td>
+                            <td class="px-4 py-1"></td>
+                        </tr>
+                        {{end}}
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <span class="text-xs font-medium text-gray-600">After</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm font-mono">
+                    <tbody>
+                        {{range .diff}}
+                        {{if or (eq .Type "equal") (eq .Type "insert")}}
+                        <tr class="{{if eq .Type "insert"}}bg-green-50 hover:bg-green-100{{else}}hover:bg-gray-50{{end}}">
+                            <td class="w-12 px-3 py-1 text-right {{if eq .Type "insert"}}text-green-600 bg-green-100 border-r border-green-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type "insert"}}font-medium{{end}}">
+                                {{if eq .Type "insert"}}+{{end}}
+                            </td>
+                            <td class="px-4 py-1 {{if eq .Type "insert"}}text-green-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
+                        </tr>
+                        {{else}}
+                        <tr class="bg-gray-100">
+                            <td class="w-12 px-3 py-1 bg-gray-200 border-r border-gray-300"></td>
+                            <td class="px-4 py-1"></td>
+                        </tr>
+                        {{end}}
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const unifiedBtn = document.getElementById('unified-btn');
+    const splitBtn = document.getElementById('split-btn');
+    const unifiedView = document.getElementById('unified-view');
+    const splitView = document.getElementById('split-view');
+
+    // Toggle between unified and split view
+    unifiedBtn.addEventListener('click', () => {
+        unifiedView.classList.remove('hidden');
+        splitView.classList.add('hidden');
+
+        unifiedBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        unifiedBtn.classList.add('bg-[#232323]', 'text-white');
+
+        splitBtn.classList.remove('bg-[#232323]', 'text-white');
+        splitBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+    });
+
+    splitBtn.addEventListener('click', () => {
+        unifiedView.classList.add('hidden');
+        splitView.classList.remove('hidden');
+
+        splitBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        splitBtn.classList.add('bg-[#232323]', 'text-white');
+
+        unifiedBtn.classList.remove('bg-[#232323]', 'text-white');
+        unifiedBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+    });
+</script>
+
+{{template "footer" .}}

@@ -22,7 +22,18 @@ type SaveVersionRequest struct {
 
 func SetupRoutes(app fiber.Router, db *sql.DB) {
 
-	app.Get("/files", func(c fiber.Ctx) error {
+	app.Get("/", func(c fiber.Ctx) error {
+		files, err := versioning.ListFiles(db)
+		if err != nil {
+			return err
+		}
+		return c.Render("home", fiber.Map{
+			"Title": "ZenTxt - Your Files",
+			"files": files,
+		})
+	})
+
+	app.Get("api/files", func(c fiber.Ctx) error {
 		files, err := versioning.ListFiles(db)
 		if err != nil {
 			return err
@@ -30,7 +41,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(files)
 	})
 
-	app.Post("/files", func(c fiber.Ctx) error {
+	app.Post("api/files", func(c fiber.Ctx) error {
 		// 1. Définir et lire le body
 		var req CreateFileRequest
 		if err := c.Bind().Body(&req); err != nil {
@@ -50,7 +61,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(file)
 	})
 
-	app.Get("/files/:id", func(c fiber.Ctx) error {
+	app.Get("api/files/:id", func(c fiber.Ctx) error {
 		id := c.Params("id")
 		file, err := versioning.GetFile(db, id)
 		if err != nil {
@@ -62,7 +73,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(file)
 	})
 
-	app.Post("/files/:id/versions", func(c fiber.Ctx) error {
+	app.Post("api/files/:id/versions", func(c fiber.Ctx) error {
 		var req SaveVersionRequest
 		if err := c.Bind().Body(&req); err != nil {
 			return err
@@ -76,7 +87,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(version)
 	})
 
-	app.Get("/files/:id/versions", func(c fiber.Ctx) error {
+	app.Get("api/files/:id/versions", func(c fiber.Ctx) error {
 		id := c.Params("id")
 		versions, err := versioning.ListVersions(db, id)
 		if err != nil {
@@ -85,7 +96,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(versions)
 	})
 
-	app.Get("/files/:id/versions/:version_id", func(c fiber.Ctx) error {
+	app.Get("api/files/:id/versions/:version_id", func(c fiber.Ctx) error {
 		versionID := c.Params("version_id")
 		version, err := versioning.GetVersion(db, versionID)
 		if err != nil {
@@ -97,7 +108,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(version)
 	})
 
-	app.Get("/files/:id/diff", func(c fiber.Ctx) error {
+	app.Get("api/files/:id/diff", func(c fiber.Ctx) error {
 		v1 := c.Query("v1")
 		v2 := c.Query("v2")
 
@@ -121,7 +132,7 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(diff)
 	})
 
-	app.Patch("/files/:id/restore/:versionID", func(c fiber.Ctx) error {
+	app.Patch("api/files/:id/restore/:versionID", func(c fiber.Ctx) error {
 		fileID := c.Params("id")
 		versionID := c.Params("versionID")
 
@@ -135,4 +146,66 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 
 		return c.JSON(restoredVersion)
 	})
+
+	// File timeline page
+	app.Get("/files/:id", func(c fiber.Ctx) error {
+		fileID := c.Params("id")
+		file, err := versioning.GetFile(db, fileID)
+		if err != nil {
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).SendString("File not found")
+			}
+			return err
+		}
+		versions, err := versioning.ListVersions(db, fileID)
+		if err != nil {
+			return err
+		}
+		return c.Render("timeline", fiber.Map{
+			"Title":    file.Name + " - Timeline",
+			"file":     file,
+			"versions": versions,
+		})
+	})
+
+	app.Get("/files/:id/diff", func(c fiber.Ctx) error {
+		fileID := c.Params("id")
+		v1 := c.Query("v1")
+		v2 := c.Query("v2")
+
+		file, err := versioning.GetFile(db, fileID)
+		if err != nil {
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).SendString("File not found")
+			}
+			return err
+		}
+
+		version1, err := versioning.GetVersion(db, v1)
+		if err != nil {
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).SendString("Version not found")
+			}
+			return err
+		}
+
+		version2, err := versioning.GetVersion(db, v2)
+		if err != nil {
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).SendString("Version not found")
+			}
+			return err
+		}
+
+		diff := versioning.GenerateDiff(version1.Content, version2.Content)
+
+		return c.Render("diff", fiber.Map{
+			"Title":    "Compare versions" + file.Name,
+			"file":     file,
+			"version1": version1,
+			"version2": version2,
+			"diff":     diff,
+		})
+	})
+
 }
