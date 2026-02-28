@@ -19,6 +19,9 @@ type File struct {
 var ErrNotFound = errors.New("not found")
 
 func CreateFile(db *sql.DB, name string, path string, projectID *string) (*File, error) {
+	if name == "" || path == "" {
+		return nil, errors.New("name and path are required")
+	}
 	// 1. Générer un UUID pour l'id
 	id := uuid.New().String()
 	// 2. Insérer en DB avec db.Exec
