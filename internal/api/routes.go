@@ -61,16 +61,43 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		return c.JSON(file)
 	})
 
-	app.Get("api/files/:id", func(c fiber.Ctx) error {
-		id := c.Params("id")
-		file, err := versioning.GetFile(db, id)
+	app.Get("/files/:id", func(c fiber.Ctx) error {
+		fileID := c.Params("id")
+		file, err := versioning.GetFile(db, fileID)
 		if err != nil {
 			if err == versioning.ErrNotFound {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+				return c.Status(fiber.StatusNotFound).SendString("File not found")
 			}
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+			return err
 		}
-		return c.JSON(file)
+		versions, err := versioning.ListVersions(db, fileID)
+		if err != nil {
+			return err
+		}
+
+		// Create a map to store previous version IDs
+		type VersionWithPrev struct {
+			*versioning.Version
+			PrevVersionID string
+		}
+
+		versionsWithPrev := make([]*VersionWithPrev, len(versions))
+		for i, v := range versions {
+			prevID := ""
+			if i > 0 {
+				prevID = versions[i-1].ID
+			}
+			versionsWithPrev[i] = &VersionWithPrev{
+				Version:       v,
+				PrevVersionID: prevID,
+			}
+		}
+
+		return c.Render("timeline", fiber.Map{
+			"Title":    file.Name + " - Timeline",
+			"file":     file,
+			"versions": versionsWithPrev,
+		})
 	})
 
 	app.Post("api/files/:id/versions", func(c fiber.Ctx) error {

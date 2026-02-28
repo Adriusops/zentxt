@@ -6,5 +6,12 @@ import (
 
 func GenerateDiff(content1 string, content2 string) []diffmatchpatch.Diff {
 	dmp := diffmatchpatch.New()
-	return dmp.DiffMain(content1, content2, false)
+
+	// Convert to line-based diff
+	a, b, lineArray := dmp.DiffLinesToChars(content1, content2)
+	diffs := dmp.DiffMain(a, b, false)
+	diffs = dmp.DiffCharsToLines(diffs, lineArray)
+	diffs = dmp.DiffCleanupSemantic(diffs) // Clean up for readability
+
+	return diffs
 }

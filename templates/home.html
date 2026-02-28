@@ -118,7 +118,7 @@
             .then(response => response.json())
             .then(data => {
                 // Save first version
-                return fetch(`/api/files/${data.id}/versions`, {
+                return fetch(`/api/files/${data.ID}/versions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -67,17 +67,17 @@
             <table class="w-full text-sm font-mono">
                 <tbody>
                     {{range .diff}}
-                    {{if eq .Type "equal"}}
+                    {{if eq .Type 0}}
                     <tr class="hover:bg-gray-50">
                         <td class="w-12 px-3 py-1 text-right text-gray-400 border-r border-gray-200 bg-gray-50 select-none"></td>
                         <td class="px-4 py-1 text-gray-700">{{.Text}}</td>
                     </tr>
-                    {{else if eq .Type "delete"}}
+                    {{else if eq .Type -1}}
                     <tr class="bg-red-50 hover:bg-red-100">
                         <td class="w-12 px-3 py-1 text-right text-red-600 border-r border-red-200 bg-red-100 select-none font-medium">-</td>
                         <td class="px-4 py-1 text-red-700">{{.Text}}</td>
                     </tr>
-                    {{else if eq .Type "insert"}}
+                    {{else if eq .Type 1}}
                     <tr class="bg-green-50 hover:bg-green-100">
                         <td class="w-12 px-3 py-1 text-right text-green-600 border-r border-green-200 bg-green-100 select-none font-medium">+</td>
                         <td class="px-4 py-1 text-green-700">{{.Text}}</td>
@@ -99,12 +99,12 @@
                 <table class="w-full text-sm font-mono">
                     <tbody>
                         {{range .diff}}
-                        {{if or (eq .Type "equal") (eq .Type "delete")}}
-                        <tr class="{{if eq .Type "delete"}}bg-red-50 hover:bg-red-100{{else}}hover:bg-gray-50{{end}}">
-                            <td class="w-12 px-3 py-1 text-right {{if eq .Type "delete"}}text-red-600 bg-red-100 border-r border-red-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type "delete"}}font-medium{{end}}">
-                                {{if eq .Type "delete"}}-{{end}}
+                        {{if or (eq .Type 0) (eq .Type -1)}}
+                        <tr class="{{if eq .Type -1}}bg-red-50 hover:bg-red-100{{else}}hover:bg-gray-50{{end}}">
+                            <td class="w-12 px-3 py-1 text-right {{if eq .Type -1}}text-red-600 bg-red-100 border-r border-red-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type -1}}font-medium{{end}}">
+                                {{if eq .Type -1}}-{{end}}
                             </td>
-                            <td class="px-4 py-1 {{if eq .Type "delete"}}text-red-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
+                            <td class="px-4 py-1 {{if eq .Type -1}}text-red-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
                         </tr>
                         {{else}}
                         <tr class="bg-gray-100">
@@ -126,12 +126,12 @@
                 <table class="w-full text-sm font-mono">
                     <tbody>
                         {{range .diff}}
-                        {{if or (eq .Type "equal") (eq .Type "insert")}}
-                        <tr class="{{if eq .Type "insert"}}bg-green-50 hover:bg-green-100{{else}}hover:bg-gray-50{{end}}">
-                            <td class="w-12 px-3 py-1 text-right {{if eq .Type "insert"}}text-green-600 bg-green-100 border-r border-green-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type "insert"}}font-medium{{end}}">
-                                {{if eq .Type "insert"}}+{{end}}
+                        {{if or (eq .Type 0) (eq .Type 1)}}
+                        <tr class="{{if eq .Type 1}}bg-green-50 hover:bg-green-100{{else}}hover:bg-gray-50{{end}}">
+                            <td class="w-12 px-3 py-1 text-right {{if eq .Type 1}}text-green-600 bg-green-100 border-r border-green-200{{else}}text-gray-400 bg-gray-50 border-r border-gray-200{{end}} select-none {{if eq .Type 1}}font-medium{{end}}">
+                                {{if eq .Type 1}}+{{end}}
                             </td>
-                            <td class="px-4 py-1 {{if eq .Type "insert"}}text-green-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
+                            <td class="px-4 py-1 {{if eq .Type 1}}text-green-700{{else}}text-gray-700{{end}}">{{.Text}}</td>
                         </tr>
                         {{else}}
                         <tr class="bg-gray-100">

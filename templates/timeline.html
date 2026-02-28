@@ -98,12 +98,14 @@
                                 class="px-3 py-1.5 text-sm text-gray-600 hover:text-[#232323] transition-colors">
                                 View
                             </button>
-                            {{if ne $index 0}}
+                            {{if $version.PrevVersionID}}
                             <button
-                                onclick="compareVersions('{{index $.versions (sub $index 1) "ID"}}', '{{$version.ID}}')"
+                                onclick="compareVersions('{{$version.PrevVersionID}}', '{{$version.ID}}')"
                                 class="px-3 py-1.5 text-sm text-gray-600 hover:text-[#232323] transition-colors">
                                 Compare
                             </button>
+                            {{end}}
+                            {{if ne $index 0}}
                             <button
                                 onclick="restoreVersion('{{$.file.ID}}', '{{$version.ID}}')"
                                 class="px-3 py-1.5 text-sm text-gray-600 hover:text-[#232323] transition-colors">
