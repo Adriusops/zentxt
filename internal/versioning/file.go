@@ -2,6 +2,7 @@ package versioning
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,8 @@ type File struct {
 	ProjectID *string
 	CreatedAt string
 }
+
+var ErrNotFound = errors.New("not found")
 
 func CreateFile(db *sql.DB, name string, path string, projectID *string) (*File, error) {
 	// 1. Générer un UUID pour l'id
@@ -58,7 +61,11 @@ func GetFile(db *sql.DB, id string) (*File, error) {
 	row := db.QueryRow("SELECT id, name, path, project_id, created_at FROM files WHERE id = ?", id)
 	var file File
 	if err := row.Scan(&file.ID, &file.Name, &file.Path, &file.ProjectID, &file.CreatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
+
 	return &file, nil
 }

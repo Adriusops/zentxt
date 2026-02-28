@@ -36,6 +36,11 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		if err := c.Bind().Body(&req); err != nil {
 			return err
 		}
+
+		if req.Name == "" || req.Path == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "name and path are required"})
+		}
+
 		// 2. Appeler CreateFile
 		file, err := versioning.CreateFile(db, req.Name, req.Path, nil)
 		if err != nil {
@@ -49,7 +54,10 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		id := c.Params("id")
 		file, err := versioning.GetFile(db, id)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
 		return c.JSON(file)
 	})
@@ -81,7 +89,10 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		versionID := c.Params("version_id")
 		version, err := versioning.GetVersion(db, versionID)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
 		return c.JSON(version)
 	})
@@ -92,11 +103,17 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 
 		version1, err := versioning.GetVersion(db, v1)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
 		version2, err := versioning.GetVersion(db, v2)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
 
 		diff := versioning.GenerateDiff(version1.Content, version2.Content)
@@ -110,7 +127,10 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 
 		restoredVersion, err := versioning.RestoreVersion(db, fileID, versionID)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
 
 		return c.JSON(restoredVersion)
