@@ -70,27 +70,10 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 			}
 			return err
 		}
-		versions, err := versioning.ListVersions(db, fileID)
+
+		versionsWithPrev, err := versioning.ListVersionsWithPrev(db, fileID)
 		if err != nil {
 			return err
-		}
-
-		// Create a map to store previous version IDs
-		type VersionWithPrev struct {
-			*versioning.Version
-			PrevVersionID string
-		}
-
-		versionsWithPrev := make([]*VersionWithPrev, len(versions))
-		for i, v := range versions {
-			prevID := ""
-			if i > 0 {
-				prevID = versions[i-1].ID
-			}
-			versionsWithPrev[i] = &VersionWithPrev{
-				Version:       v,
-				PrevVersionID: prevID,
-			}
 		}
 
 		return c.Render("timeline", fiber.Map{

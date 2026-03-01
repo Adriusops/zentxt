@@ -20,6 +20,11 @@ type Version struct {
 	CreatedAt     string
 }
 
+type VersionWithPrev struct {
+	*Version
+	PrevVersionID string
+}
+
 func SaveVersion(db *sql.DB, fileID string, path string, author string, message string, content string) (*Version, error) {
 	// 1. Générer un UUID pour l'id
 	id := uuid.New().String()
@@ -116,4 +121,25 @@ func RestoreVersion(db *sql.DB, fileID string, versionID string) (*Version, erro
 		return nil, err
 	}
 	return currentVersion, nil
+}
+
+func ListVersionsWithPrev(db *sql.DB, fileID string) ([]*VersionWithPrev, error) {
+	versions, err := ListVersions(db, fileID)
+	if err != nil {
+		return nil, err
+	}
+
+	versionsWithPrev := make([]*VersionWithPrev, len(versions))
+	for i, v := range versions {
+		prevID := ""
+		if i > 0 {
+			prevID = versions[i-1].ID
+		}
+		versionsWithPrev[i] = &VersionWithPrev{
+			Version:       v,
+			PrevVersionID: prevID,
+		}
+	}
+
+	return versionsWithPrev, nil
 }
