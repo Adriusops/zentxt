@@ -10,17 +10,24 @@ No branches. No jargon. Just your files, with a memory.
 
 ## Getting started
 
-**With Go**
 ```bash
 git clone https://github.com/Adriusops/zentxt
 cd zentxt
 go run ./cmd/zentxt/
 ```
 
+Open `http://localhost:3000` — that's it.
+
 **With Docker**
 ```bash
 docker build -t zentxt .
 docker run -p 3000:3000 zentxt
+```
+
+**With hot reload (recommended for development)**
+```bash
+go install github.com/air-verse/air@latest
+air
 ```
 
 Your API is now running at `http://localhost:3000`.
