@@ -40,7 +40,7 @@ func CreateFile(db *sql.DB, name string, path string, projectID *string) (*File,
 }
 
 func ListFiles(db *sql.DB) ([]*File, error) {
-	rows, err := db.Query("SELECT id, name, path, project_id, created_at FROM files")
+	rows, err := db.Query("SELECT id, name, path, project_id, created_at FROM files ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
