@@ -10,9 +10,9 @@
             </svg>
             <div>
                 <p class="text-base font-medium text-gray-600 group-hover:text-[#232323] transition-colors">Drop a file here to start tracking</p>
-                <p class="text-sm text-gray-400 mt-1">or click to browse</p>
+                <p class="text-sm text-gray-400 mt-1">Supports .txt and .md files</p>
             </div>
-            <input type="file" id="file-input" class="hidden">
+            <input type="file" id="file-input" accept=".txt,.md" class="hidden">
         </div>
     </div>
 
@@ -99,6 +99,14 @@
         if (files.length === 0) return;
 
         const file = files[0]; // Only handle first file
+
+        // Validate file extension
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) {
+            alert('ZenTxt only supports .txt and .md files.\n\nPlease convert your document to plain text before uploading.');
+            return;
+        }
+
         const reader = new FileReader();
 
         reader.onload = function(e) {
