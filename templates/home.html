@@ -2,17 +2,40 @@
 
 <div class="space-y-8">
     <!-- Drag & Drop Zone -->
-    <div id="drop-zone"
-         class="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer group">
+    <div
+        id="drop-zone"
+        class="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer group"
+    >
         <div class="space-y-3">
-            <svg class="mx-auto h-12 w-12 text-gray-300 group-hover:text-gray-600 transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+                class="mx-auto h-12 w-12 text-gray-300 group-hover:text-gray-600 transition-colors"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+            >
+                <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
             </svg>
             <div>
-                <p class="text-base font-medium text-gray-600 group-hover:text-[#232323] transition-colors">Drop a file here to start tracking</p>
-                <p class="text-sm text-gray-400 mt-1">Supports .txt and .md files</p>
+                <p
+                    class="text-base font-medium text-gray-600 group-hover:text-[#232323] transition-colors"
+                >
+                    Drop a file here to start tracking
+                </p>
+                <p class="text-sm text-gray-400 mt-1">
+                    Supports .txt and .md files
+                </p>
             </div>
-            <input type="file" id="file-input" accept=".txt,.md" class="hidden">
+            <input
+                type="file"
+                id="file-input"
+                accept=".txt,.md"
+                class="hidden"
+            />
         </div>
     </div>
 
@@ -20,53 +43,152 @@
     <div>
         <h2 class="text-lg font-medium text-gray-900 mb-4">Your files</h2>
 
-        <div id="files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {{if .files}}
-                {{range .files}}
-                <a href="/files/{{.ID}}"
-                   data-file-id="{{.ID}}"
-                   class="file-card block rounded-xl border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all group overflow-hidden bg-white">
-                    <!-- Preview Section -->
-                    <div class="p-6 border-b border-gray-100 bg-gray-50 min-h-[120px]">
-                        <div class="preview-content text-sm text-gray-600 line-clamp-3 font-mono whitespace-pre-wrap">
-                            <span class="text-gray-400 italic">Loading preview...</span>
+        <div
+            id="files-list"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+            {{if .files}} {{range .files}}
+            <a
+                href="/files/{{.ID}}"
+                data-file-id="{{.ID}}"
+                class="file-card block group"
+            >
+                <!-- Card container -->
+                <div
+                    class="relative bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all border border-gray-200"
+                >
+                    <!-- Top section with gray background for paper -->
+                    <div
+                        class="bg-gray-50 p-8 pb-0 flex flex-col justify-end min-h-[240px] relative"
+                    >
+                        <!-- Paper sheet with margins, aligned to bottom -->
+                        <div
+                            class="mx-auto bg-white rounded-t-lg shadow-md overflow-hidden min-h-[200px] p-8 pb-12 relative border border-b-0 border-gray-300"
+                            style="max-width: 98%"
+                        >
+                            <!-- Subtle lines like a paper -->
+                            <div
+                                class="absolute inset-0 pointer-events-none opacity-20"
+                            >
+                                <div
+                                    class="h-full flex flex-col justify-start pt-8 gap-[22px]"
+                                >
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                    <div
+                                        class="w-full h-[1px] bg-gray-400"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <!-- Text content -->
+                            <div
+                                class="preview-content text-sm text-gray-900 line-clamp-4 leading-relaxed font-body relative z-10"
+                                style="line-height: 24px"
+                            >
+                                <span class="text-gray-400 italic"
+                                    >Loading preview...</span
+                                >
+                            </div>
                         </div>
                     </div>
-                    <!-- Info Section -->
-                    <div class="p-4">
-                        <h3 class="text-base font-medium text-gray-900 group-hover:text-[#232323] transition-colors truncate mb-1">
+
+                    <!-- Bottom section with white background for file info - overlaps paper -->
+                    <div class="bg-white px-8 py-6 relative z-20 -mt-8">
+                        <h3
+                            class="text-base font-bold text-gray-900 mb-2 font-display"
+                        >
                             {{.Name}}
                         </h3>
-                        <p class="text-xs text-gray-400">{{.CreatedAt}}</p>
+                        <p
+                            class="text-sm text-gray-400 timestamp"
+                            data-date="{{.CreatedAt}}"
+                        >
+                            {{.CreatedAt}}
+                        </p>
                     </div>
-                </a>
-                {{end}}
-            {{else}}
-                <div class="col-span-full text-center py-12">
-                    <p class="text-gray-400 text-sm">No files yet. Drop one above to get started.</p>
                 </div>
+            </a>
+            {{end}} {{else}}
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-400 text-sm">
+                    No files yet. Drop one above to get started.
+                </p>
+            </div>
             {{end}}
         </div>
     </div>
 </div>
 
 <style>
-    .line-clamp-3 {
+    .line-clamp-4 {
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 4;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 </style>
 
 <script>
+    // Format date to relative format (Today, Yesterday, or date)
+    function formatRelativeDate(isoString) {
+        const date = new Date(isoString);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        const timeStr = date.toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+
+        if (diffDays === 0) {
+            return `Today, ${timeStr}`;
+        } else if (diffDays === 1) {
+            return `Yesterday, ${timeStr}`;
+        } else if (diffDays < 7) {
+            return `${diffDays} days ago, ${timeStr}`;
+        } else {
+            return (
+                date.toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                }) +
+                ", " +
+                timeStr
+            );
+        }
+    }
+
     // Load previews for all files
-    document.addEventListener('DOMContentLoaded', async () => {
-        const fileCards = document.querySelectorAll('.file-card');
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Format all timestamps
+        document.querySelectorAll(".timestamp").forEach((el) => {
+            const isoDate = el.getAttribute("data-date");
+            if (isoDate) {
+                el.textContent = formatRelativeDate(isoDate);
+            }
+        });
+
+        const fileCards = document.querySelectorAll(".file-card");
 
         for (const card of fileCards) {
-            const fileId = card.getAttribute('data-file-id');
-            const previewElement = card.querySelector('.preview-content');
+            const fileId = card.getAttribute("data-file-id");
+            const previewElement = card.querySelector(".preview-content");
 
             try {
                 // Get versions for this file
@@ -76,39 +198,47 @@
                 if (versions && versions.length > 0) {
                     // Get the latest version (first in the array since they're sorted DESC)
                     const latestVersion = versions[0];
-                    const content = latestVersion.Content || latestVersion.content || '';
+                    const content =
+                        latestVersion.Content || latestVersion.content || "";
 
                     if (content) {
-                        // Get first 3 lines or first 150 characters
-                        const lines = content.split('\n').slice(0, 3);
-                        const preview = lines.join('\n').substring(0, 150);
-                        previewElement.textContent = preview + (content.length > 150 ? '...' : '');
-                        previewElement.classList.remove('text-gray-400', 'italic');
+                        // Get first 4 lines or first 200 characters for cleaner look
+                        const lines = content.split("\n").slice(0, 4);
+                        const preview = lines.join("\n").substring(0, 200);
+                        previewElement.textContent =
+                            preview + (content.length > 200 ? "..." : "");
+                        previewElement.classList.remove(
+                            "text-gray-400",
+                            "italic",
+                        );
                     } else {
-                        previewElement.innerHTML = '<span class="text-gray-400 italic">Empty file</span>';
+                        previewElement.innerHTML =
+                            '<span class="text-gray-400 italic">Empty file</span>';
                     }
                 } else {
-                    previewElement.innerHTML = '<span class="text-gray-400 italic">No versions yet</span>';
+                    previewElement.innerHTML =
+                        '<span class="text-gray-400 italic">No versions yet</span>';
                 }
             } catch (error) {
-                console.error('Error loading preview:', error);
-                previewElement.innerHTML = '<span class="text-gray-400 italic">Failed to load preview</span>';
+                console.error("Error loading preview:", error);
+                previewElement.innerHTML =
+                    '<span class="text-gray-400 italic">Failed to load preview</span>';
             }
         }
     });
 
     // Drag & Drop functionality
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const filesList = document.getElementById('files-list');
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file-input");
+    const filesList = document.getElementById("files-list");
 
     // Click to browse
-    dropZone.addEventListener('click', () => {
+    dropZone.addEventListener("click", () => {
         fileInput.click();
     });
 
     // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
         dropZone.addEventListener(eventName, preventDefaults, false);
         document.body.addEventListener(eventName, preventDefaults, false);
     });
@@ -119,26 +249,26 @@
     }
 
     // Highlight drop zone when dragging
-    ['dragenter', 'dragover'].forEach(eventName => {
+    ["dragenter", "dragover"].forEach((eventName) => {
         dropZone.addEventListener(eventName, () => {
-            dropZone.classList.add('border-gray-400', 'bg-gray-50');
+            dropZone.classList.add("border-gray-400", "bg-gray-50");
         });
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
+    ["dragleave", "drop"].forEach((eventName) => {
         dropZone.addEventListener(eventName, () => {
-            dropZone.classList.remove('border-gray-400', 'bg-gray-50');
+            dropZone.classList.remove("border-gray-400", "bg-gray-50");
         });
     });
 
     // Handle dropped files
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener("drop", (e) => {
         const files = e.dataTransfer.files;
         handleFiles(files);
     });
 
     // Handle file input change
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener("change", (e) => {
         const files = e.target.files;
         handleFiles(files);
     });
@@ -151,51 +281,53 @@
 
         // Validate file extension
         const fileName = file.name.toLowerCase();
-        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) {
-            alert('ZenTxt only supports .txt and .md files.\n\nPlease convert your document to plain text before uploading.');
+        if (!fileName.endsWith(".txt") && !fileName.endsWith(".md")) {
+            alert(
+                "ZenTxt only supports .txt and .md files.\n\nPlease convert your document to plain text before uploading.",
+            );
             return;
         }
 
         const reader = new FileReader();
 
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             const content = e.target.result;
 
             // Create file via API
-            fetch('/api/files', {
-                method: 'POST',
+            fetch("/api/files", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     name: file.name,
-                    path: file.name // In a real app, this would be the full path
+                    path: file.name, // In a real app, this would be the full path
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // Save first version
+                    return fetch(`/api/files/${data.ID}/versions`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            path: file.name,
+                            author: "You",
+                            message: "Initial version",
+                            content: content,
+                        }),
+                    });
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Save first version
-                return fetch(`/api/files/${data.ID}/versions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        path: file.name,
-                        author: 'You',
-                        message: 'Initial version',
-                        content: content
-                    })
+                .then(() => {
+                    // Reload page to show new file
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Failed to add file. Please try again.");
                 });
-            })
-            .then(() => {
-                // Reload page to show new file
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to add file. Please try again.');
-            });
         };
 
         reader.readAsText(file);
