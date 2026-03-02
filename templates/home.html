@@ -20,26 +20,29 @@
     <div>
         <h2 class="text-lg font-medium text-gray-900 mb-4">Your files</h2>
 
-        <div id="files-list" class="space-y-2">
+        <div id="files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {{if .files}}
                 {{range .files}}
                 <a href="/files/{{.ID}}"
-                   class="block p-4 rounded-lg border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all group">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-base font-medium text-gray-900 group-hover:text-[#232323] transition-colors truncate">
-                                {{.Name}}
-                            </h3>
-                            <p class="text-sm text-gray-400 mt-0.5 truncate">{{.Path}}</p>
+                   data-file-id="{{.ID}}"
+                   class="file-card block rounded-xl border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all group overflow-hidden bg-white">
+                    <!-- Preview Section -->
+                    <div class="p-6 border-b border-gray-100 bg-gray-50 min-h-[120px]">
+                        <div class="preview-content text-sm text-gray-600 line-clamp-3 font-mono whitespace-pre-wrap">
+                            <span class="text-gray-400 italic">Loading preview...</span>
                         </div>
-                        <div class="ml-4 text-right flex-shrink-0">
-                            <p class="text-xs text-gray-400">{{.CreatedAt}}</p>
-                        </div>
+                    </div>
+                    <!-- Info Section -->
+                    <div class="p-4">
+                        <h3 class="text-base font-medium text-gray-900 group-hover:text-[#232323] transition-colors truncate mb-1">
+                            {{.Name}}
+                        </h3>
+                        <p class="text-xs text-gray-400">{{.CreatedAt}}</p>
                     </div>
                 </a>
                 {{end}}
             {{else}}
-                <div class="text-center py-12">
+                <div class="col-span-full text-center py-12">
                     <p class="text-gray-400 text-sm">No files yet. Drop one above to get started.</p>
                 </div>
             {{end}}
@@ -47,7 +50,53 @@
     </div>
 </div>
 
+<style>
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
 <script>
+    // Load previews for all files
+    document.addEventListener('DOMContentLoaded', async () => {
+        const fileCards = document.querySelectorAll('.file-card');
+
+        for (const card of fileCards) {
+            const fileId = card.getAttribute('data-file-id');
+            const previewElement = card.querySelector('.preview-content');
+
+            try {
+                // Get versions for this file
+                const response = await fetch(`/api/files/${fileId}/versions`);
+                const versions = await response.json();
+
+                if (versions && versions.length > 0) {
+                    // Get the latest version (first in the array since they're sorted DESC)
+                    const latestVersion = versions[0];
+                    const content = latestVersion.Content || latestVersion.content || '';
+
+                    if (content) {
+                        // Get first 3 lines or first 150 characters
+                        const lines = content.split('\n').slice(0, 3);
+                        const preview = lines.join('\n').substring(0, 150);
+                        previewElement.textContent = preview + (content.length > 150 ? '...' : '');
+                        previewElement.classList.remove('text-gray-400', 'italic');
+                    } else {
+                        previewElement.innerHTML = '<span class="text-gray-400 italic">Empty file</span>';
+                    }
+                } else {
+                    previewElement.innerHTML = '<span class="text-gray-400 italic">No versions yet</span>';
+                }
+            } catch (error) {
+                console.error('Error loading preview:', error);
+                previewElement.innerHTML = '<span class="text-gray-400 italic">Failed to load preview</span>';
+            }
+        }
+    });
+
     // Drag & Drop functionality
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
