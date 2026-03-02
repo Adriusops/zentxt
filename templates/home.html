@@ -143,7 +143,7 @@
 </style>
 
 <script>
-    // Format date to relative format (Today, Yesterday, or date)
+    // Format date to relative format (Today, Yesterday, or full date)
     function formatRelativeDate(isoString) {
         const date = new Date(isoString);
         const now = new Date();
@@ -159,9 +159,8 @@
             return `Today, ${timeStr}`;
         } else if (diffDays === 1) {
             return `Yesterday, ${timeStr}`;
-        } else if (diffDays < 7) {
-            return `${diffDays} days ago, ${timeStr}`;
         } else {
+            // For all other dates, show full date
             return (
                 date.toLocaleDateString("fr-FR", {
                     day: "2-digit",
