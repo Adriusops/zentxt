@@ -57,7 +57,7 @@ func SaveVersion(db *sql.DB, fileID string, path string, author string, message 
 }
 
 func ListVersions(db *sql.DB, fileID string) ([]*Version, error) {
-	rows, err := db.Query("SELECT id, file_id, version_number, path, author, message, content, created_at FROM versions WHERE file_id = ?", fileID)
+	rows, err := db.Query("SELECT id, file_id, version_number, path, author, message, content, created_at FROM versions WHERE file_id = ? ORDER BY version_number DESC", fileID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +132,8 @@ func ListVersionsWithPrev(db *sql.DB, fileID string) ([]*VersionWithPrev, error)
 	versionsWithPrev := make([]*VersionWithPrev, len(versions))
 	for i, v := range versions {
 		prevID := ""
-		if i > 0 {
-			prevID = versions[i-1].ID
+		if i+1 < len(versions) {
+			prevID = versions[i+1].ID
 		}
 		versionsWithPrev[i] = &VersionWithPrev{
 			Version:       v,
