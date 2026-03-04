@@ -2,25 +2,25 @@ package storage
 
 import (
 	"database/sql"
-	"os"
+	"embed"
 	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
 
-func InitDB() (*sql.DB, error) {
+func InitDB(migrationsFS embed.FS) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", "zentxt.db")
 	if err != nil {
 		return nil, err
 	}
 
-	migrations, err := os.ReadDir("migrations/")
+	migrations, err := migrationsFS.ReadDir("migrations")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, migration := range migrations {
-		runMigration, err := os.ReadFile(filepath.Join("migrations", migration.Name()))
+		runMigration, err := migrationsFS.ReadFile(filepath.Join("migrations", migration.Name()))
 		if err != nil {
 			return nil, err
 		}
