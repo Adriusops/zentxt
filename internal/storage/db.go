@@ -3,7 +3,7 @@ package storage
 import (
 	"database/sql"
 	"embed"
-	"path/filepath"
+	"path"
 
 	_ "modernc.org/sqlite"
 )
@@ -20,7 +20,7 @@ func InitDB(migrationsFS embed.FS) (*sql.DB, error) {
 	}
 
 	for _, migration := range migrations {
-		runMigration, err := migrationsFS.ReadFile(filepath.Join("migrations", migration.Name()))
+		runMigration, err := migrationsFS.ReadFile(path.Join("migrations", migration.Name()))
 		if err != nil {
 			return nil, err
 		}
