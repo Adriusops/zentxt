@@ -283,3 +283,89 @@ func TestRestoreVersion_InvalidVersionID(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
+
+func TestDeleteVersion_Success(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Initial Commit", "blablabla")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v2, err := versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Second Commit", "blablablax2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/api/files/%s/versions/%s", file.ID, v2.ID), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestDeleteVersionRoute_LastVersion(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v1, err := versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Second Commit", "blablablax2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/api/files/%s/versions/%s", file.ID, v1.ID), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestDeleteVersionRoute_InvalidVersionID(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Second Commit", "blablablax2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("/api/files/%s/versions/%s", file.ID, "1984"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}

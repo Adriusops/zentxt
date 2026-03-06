@@ -137,3 +137,51 @@ func ListVersionsWithPrev(db *sql.DB, fileID string) ([]*VersionWithPrev, error)
 
 	return versionsWithPrev, nil
 }
+
+func DeleteVersion(db *sql.DB, versionID string) error {
+	currentVersion, err := GetVersion(db, versionID)
+	if err != nil {
+		return err
+	}
+
+	// count versions
+	versions, err := ListVersions(db, currentVersion.FileID)
+	if err != nil {
+		return err
+	}
+
+	if len(versions) > 1 {
+		// Back to prev version
+		_, err = db.Exec("DELETE FROM versions WHERE id = ?", currentVersion.ID)
+		if err != nil {
+			return err
+		}
+
+		var prevVersion *Version
+		for _, version := range versions {
+			if version.VersionNumber < currentVersion.VersionNumber {
+				prevVersion = version
+			}
+		}
+		if prevVersion != nil {
+			_, err = db.Exec("UPDATE files SET current_version_id = ? WHERE id = ?", prevVersion.ID, currentVersion.FileID)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if len(versions) == 1 {
+		_, err = db.Exec("DELETE FROM versions WHERE id = ?", currentVersion.ID)
+		if err != nil {
+			return err
+		}
+		// Delete file
+		_, err = db.Exec("DELETE FROM files WHERE id = ?", currentVersion.FileID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

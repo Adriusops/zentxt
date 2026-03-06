@@ -227,4 +227,17 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		})
 	})
 
+	app.Delete("api/files/:id/versions/:version_id", func(c fiber.Ctx) error {
+		versionID := c.Params("version_id")
+
+		err := versioning.DeleteVersion(db, versionID)
+		if err != nil {
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).SendString("Version not found")
+			}
+			return err
+		}
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
 }
