@@ -199,3 +199,87 @@ func TestSaveVersion_ErrorInvalidFileID(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
+
+func TestRestoreVersion_Success(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	version, err := versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Initial Commit", "blablabla")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("/api/files/%s/restore/%s", file.ID, version.ID), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestRestoreVersion_InvalidFileID(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	version, err := versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Initial Commit", "blablabla")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("/api/files/59/restore/%s", version.ID), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestRestoreVersion_InvalidVersionID(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = versioning.SaveVersion(db, file.ID, "/tmp/test.txt", "You", "Initial Commit", "blablabla")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("/api/files/%s/restore/89", file.ID), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}

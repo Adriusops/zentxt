@@ -2,8 +2,6 @@ package versioning
 
 import (
 	"database/sql"
-	"io"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -87,6 +85,9 @@ func GetVersion(db *sql.DB, id string) (*Version, error) {
 	row := db.QueryRow("SELECT id, file_id, version_number, path, author, message, content, created_at FROM versions WHERE id = ?", id)
 	var version Version
 	if err := row.Scan(&version.ID, &version.FileID, &version.VersionNumber, &version.Path, &version.Author, &version.Message, &version.Content, &version.CreatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	return &version, nil
@@ -108,22 +109,6 @@ func RestoreVersion(db *sql.DB, fileID string, versionID string) (*Version, erro
 		return nil, err
 	}
 
-	src, err := os.Open(currentVersion.Path)
-	if err != nil {
-		return nil, err
-	}
-	defer src.Close()
-
-	dst, err := os.Create(currentFile.Path)
-	if err != nil {
-		return nil, err
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		return nil, err
-	}
 	return currentVersion, nil
 }
 
