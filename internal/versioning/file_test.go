@@ -43,3 +43,10 @@ func TestCreateFile_EmptyName(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, file)
 }
+
+func TestGetFile_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	file, err := GetFile(db, "")
+	assert.Equal(t, ErrNotFound, err)
+	assert.Nil(t, file)
+}
