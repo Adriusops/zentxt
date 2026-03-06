@@ -55,7 +55,7 @@
             >
                 <!-- Card container -->
                 <div
-                    class="relative bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all border border-gray-200"
+                    class="file-drop-zone relative bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all border border-gray-200"
                 >
                     <!-- Top section with gray background for paper -->
                     <div
@@ -120,6 +120,30 @@
                             {{.CreatedAt}}
                         </p>
                     </div>
+
+                    <!-- Drop overlay - shown when dragging over this card -->
+                    <div
+                        class="drop-overlay absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-30"
+                    >
+                        <div class="text-center">
+                            <svg
+                                class="mx-auto h-12 w-12 text-gray-900 mb-3"
+                                stroke="currentColor"
+                                fill="none"
+                                viewBox="0 0 48 48"
+                            >
+                                <path
+                                    d="M24 8v24m0 0l-8-8m8 8l8-8"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            <p class="text-gray-900 font-medium text-sm">
+                                Drop to save new version
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </a>
             {{end}} {{else}}
@@ -130,6 +154,58 @@
             </div>
             {{end}}
         </div>
+    </div>
+</div>
+
+<!-- Modal for version message -->
+<div
+    id="version-modal"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden"
+>
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+            Save new version
+        </h3>
+        <p class="text-sm text-gray-500 mb-6">
+            Describe what changed in this version
+        </p>
+
+        <form id="version-form">
+            <div class="space-y-4">
+                <div>
+                    <label
+                        for="version-message"
+                        class="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                        Version message
+                    </label>
+                    <textarea
+                        id="version-message"
+                        name="message"
+                        rows="3"
+                        placeholder="e.g., Added new chapter, Fixed typos, Updated conclusion..."
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button
+                        type="button"
+                        id="cancel-version"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                        Save version
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -271,6 +347,170 @@
         const files = e.target.files;
         handleFiles(files);
     });
+
+    // Modal management
+    const modal = document.getElementById("version-modal");
+    const versionForm = document.getElementById("version-form");
+    const versionMessageInput = document.getElementById("version-message");
+    const cancelButton = document.getElementById("cancel-version");
+
+    let pendingVersionData = null; // Store file data while waiting for message
+
+    function showModal() {
+        modal.classList.remove("hidden");
+        versionMessageInput.value = "";
+        versionMessageInput.focus();
+    }
+
+    function hideModal() {
+        modal.classList.add("hidden");
+        pendingVersionData = null;
+    }
+
+    // Cancel button
+    cancelButton.addEventListener("click", hideModal);
+
+    // Close modal when clicking outside
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            hideModal();
+        }
+    });
+
+    // Handle form submission
+    versionForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        if (!pendingVersionData) return;
+
+        const message = versionMessageInput.value.trim();
+        if (!message) return;
+
+        const { fileId, content, fileName } = pendingVersionData;
+
+        const payload = {
+            path: fileName,
+            author: "You",
+            message: message,
+            content: content,
+        };
+
+        console.log("Sending version with message:", payload);
+
+        // Save new version with user's message
+        fetch(`/api/files/${fileId}/versions`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to save version");
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Reload page to show updated preview
+                window.location.reload();
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("Failed to save new version. Please try again.");
+                hideModal();
+            });
+    });
+
+    // Drag & Drop on file cards to create new version
+    function setupFileCardDropZones() {
+        const fileCards = document.querySelectorAll(".file-card");
+
+        fileCards.forEach((card) => {
+            const dropZone = card.querySelector(".file-drop-zone");
+            const overlay = card.querySelector(".drop-overlay");
+
+            // Prevent default drag behaviors on cards
+            ["dragenter", "dragover", "dragleave", "drop"].forEach(
+                (eventName) => {
+                    dropZone.addEventListener(
+                        eventName,
+                        (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        },
+                        false,
+                    );
+                },
+            );
+
+            let dragCounter = 0; // Track enter/leave events
+
+            // Show overlay when dragging over card
+            dropZone.addEventListener("dragenter", (e) => {
+                dragCounter++;
+                overlay.classList.remove("opacity-0");
+                overlay.classList.add("opacity-100", "pointer-events-auto");
+            });
+
+            dropZone.addEventListener("dragover", (e) => {
+                overlay.classList.remove("opacity-0");
+                overlay.classList.add("opacity-100", "pointer-events-auto");
+            });
+
+            // Hide overlay when leaving card
+            dropZone.addEventListener("dragleave", (e) => {
+                dragCounter--;
+                // Only hide if we've left all nested elements
+                if (dragCounter === 0) {
+                    overlay.classList.add("opacity-0");
+                    overlay.classList.remove("opacity-100", "pointer-events-auto");
+                }
+            });
+
+            // Handle file drop on card
+            dropZone.addEventListener("drop", (e) => {
+                dragCounter = 0; // Reset counter
+                overlay.classList.add("opacity-0");
+                overlay.classList.remove("opacity-100", "pointer-events-auto");
+
+                const files = e.dataTransfer.files;
+                if (files.length === 0) return;
+
+                const file = files[0];
+                const fileId = card.getAttribute("data-file-id");
+
+                // Validate file extension
+                const fileName = file.name.toLowerCase();
+                if (!fileName.endsWith(".txt") && !fileName.endsWith(".md")) {
+                    alert(
+                        "ZenTxt only supports .txt and .md files.\n\nPlease convert your document to plain text before uploading.",
+                    );
+                    return;
+                }
+
+                // Read file and show modal
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const content = e.target.result;
+
+                    // Store data for when user submits the form
+                    pendingVersionData = {
+                        fileId: fileId,
+                        content: content,
+                        fileName: file.name,
+                    };
+
+                    // Show modal to get version message
+                    showModal();
+                };
+                reader.readAsText(file);
+            });
+        });
+    }
+
+    // Initialize file card drop zones after DOM is loaded
+    document.addEventListener("DOMContentLoaded", setupFileCardDropZones);
 
     // Process uploaded file
     function handleFiles(files) {
