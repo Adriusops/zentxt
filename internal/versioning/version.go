@@ -36,6 +36,11 @@ func SaveVersion(db *sql.DB, fileID string, path string, author string, message 
 		return nil, ErrNotFound
 	}
 
+	err = db.QueryRow("SELECT COUNT(*) FROM versions WHERE file_id = ?", fileID).Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = db.Exec("INSERT INTO versions (id, file_id, version_number, path, author, message, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, fileID, count+1, path, author, message, content, time.Now().Format(time.RFC3339))
 	if err != nil {
 		return nil, err
