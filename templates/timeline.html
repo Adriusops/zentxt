@@ -127,8 +127,8 @@
                                     >
                                         <div class="py-1">
                                             <button
-                                                disabled
-                                                class="w-full px-4 py-2.5 text-left text-sm text-gray-400 cursor-not-allowed flex items-center gap-3"
+                                                onclick="openShareModal('{{$.file.ID}}', '{{$version.ID}}', '{{$.file.Name}}', {{$version.VersionNumber}}, '{{$version.Message}}')"
+                                                class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -228,7 +228,102 @@
         flex-direction: column;
         align-items: center;
     }
+
+    /* Smooth animations for version deletion */
+    .timeline-item {
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .timeline-item.deleting {
+        opacity: 0;
+        transform: translateX(-30px);
+        pointer-events: none;
+    }
+
+    /* Fade in animation for new items */
+    @keyframes fadeInSlide {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .timeline-item {
+        animation: fadeInSlide 0.3s ease-out;
+    }
 </style>
+
+    <!-- Share by Email Modal -->
+    <div id="share-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">
+                Share version <span id="share-version-number"></span>
+            </h3>
+            <p class="text-sm text-gray-500 mb-6">
+                Opens your email client with everything pre-filled
+            </p>
+
+            <form id="share-form" class="space-y-4">
+                <div>
+                    <label for="share-email" class="block text-sm font-medium text-gray-700 mb-2">
+                        To
+                    </label>
+                    <input
+                        type="email"
+                        id="share-email"
+                        placeholder="colleague@company.com"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label for="share-message" class="block text-sm font-medium text-gray-700 mb-2">
+                        Message (optional)
+                    </label>
+                    <textarea
+                        id="share-message"
+                        rows="3"
+                        placeholder="Here's the latest version..."
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900" id="share-file-name"></p>
+                            <p class="text-xs text-gray-500 mt-0.5" id="share-version-info"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button
+                        type="button"
+                        id="cancel-share"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                        Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -305,8 +400,12 @@
     const cancelDeleteBtn = document.getElementById('cancel-delete');
     const confirmDeleteBtn = document.getElementById('confirm-delete');
     const deleteWarning = document.getElementById('delete-warning');
+    const shareModal = document.getElementById('share-modal');
+    const shareForm = document.getElementById('share-form');
+    const cancelShareBtn = document.getElementById('cancel-share');
 
     let pendingDelete = null; // Store delete info
+    let pendingShare = null; // Store share info
 
     // Toggle dropdown menu
     function toggleMenu(event, versionId) {
@@ -366,29 +465,166 @@
         }
     });
 
-    // Execute delete
+    // Execute delete with animation
     confirmDeleteBtn.addEventListener('click', async () => {
         if (!pendingDelete) return;
 
-        const { versionId } = pendingDelete;
+        const { versionId, versionNumber } = pendingDelete;
+        const totalVersions = document.querySelectorAll('.timeline-item').length;
+        const isLastVersion = totalVersions === 1;
 
-        try {
-            const response = await fetch(`/api/files/{{.file.ID}}/versions/${versionId}`, {
+        // Find the timeline item to animate
+        const menuElement = document.getElementById(`menu-${versionId}`);
+        const timelineItem = menuElement?.closest('.timeline-item');
+
+        // Close modal immediately
+        deleteModal.classList.add('hidden');
+
+        // If it's the last version, file is deleted -> go to homepage (no animation needed)
+        if (isLastVersion) {
+            try {
+                const response = await fetch(`/api/files/{{.file.ID}}/versions/${versionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok || response.status === 204) {
+                    window.location.href = '/';
+                } else {
+                    alert('Failed to delete version. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to delete version. Please try again.');
+            }
+        } else {
+            // Start animation immediately (must happen synchronously)
+            if (timelineItem) {
+                timelineItem.classList.add('deleting');
+            }
+
+            // Launch API call without blocking (don't await here)
+            const deletePromise = fetch(`/api/files/{{.file.ID}}/versions/${versionId}`, {
                 method: 'DELETE'
             });
 
-            if (response.ok || response.status === 204) {
-                // Redirect to home if file was deleted, otherwise reload
-                window.location.href = '/';
-            } else {
-                alert('Failed to delete version. Please try again.');
-                deleteModal.classList.add('hidden');
-            }
+            // Wait for animation to complete
+            setTimeout(async () => {
+                try {
+                    const response = await deletePromise;
+
+                    if (response.ok || response.status === 204) {
+                        if (timelineItem) {
+                            timelineItem.remove();
+
+                            // Update "Latest" badge if we deleted the first version
+                            const remainingItems = document.querySelectorAll('.timeline-item');
+                            if (remainingItems.length > 0) {
+                                // Check if first item needs "Latest" badge
+                                const firstItem = remainingItems[0];
+                                const badges = firstItem.querySelector('.flex.items-center.gap-2');
+                                const hasLatestBadge = badges?.querySelector('.bg-green-100');
+
+                                if (!hasLatestBadge) {
+                                    const latestBadge = document.createElement('span');
+                                    latestBadge.className = 'inline-block px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded';
+                                    latestBadge.textContent = 'Latest';
+                                    badges?.appendChild(latestBadge);
+                                }
+                            }
+                        }
+                    } else {
+                        alert('Failed to delete version. Please try again.');
+                        if (timelineItem) {
+                            timelineItem.classList.remove('deleting');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete version. Please try again.');
+                    if (timelineItem) {
+                        timelineItem.classList.remove('deleting');
+                    }
+                }
+            }, 400); // Match the CSS transition duration
+        }
+    });
+
+    // Open share modal
+    async function openShareModal(fileId, versionId, fileName, versionNumber, versionMessage) {
+        try {
+            // Fetch version content
+            const response = await fetch(`/api/files/${fileId}/versions/${versionId}`);
+            const version = await response.json();
+            const content = version.Content || version.content || '';
+
+            pendingShare = {
+                fileName,
+                versionNumber,
+                versionMessage,
+                content
+            };
+
+            // Update modal content
+            document.getElementById('share-version-number').textContent = versionNumber;
+            document.getElementById('share-file-name').textContent = fileName;
+            document.getElementById('share-version-info').textContent = versionMessage;
+
+            // Show modal
+            shareModal.classList.remove('hidden');
+            document.getElementById('share-email').focus();
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to delete version. Please try again.');
-            deleteModal.classList.add('hidden');
+            alert('Failed to load version content. Please try again.');
         }
+    }
+
+    // Cancel share
+    cancelShareBtn.addEventListener('click', () => {
+        shareModal.classList.add('hidden');
+        shareForm.reset();
+        pendingShare = null;
+    });
+
+    // Close share modal when clicking outside
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) {
+            shareModal.classList.add('hidden');
+            shareForm.reset();
+            pendingShare = null;
+        }
+    });
+
+    // Handle share form submission
+    shareForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        if (!pendingShare) return;
+
+        const email = document.getElementById('share-email').value;
+        const message = document.getElementById('share-message').value;
+        const { fileName, versionNumber, versionMessage, content } = pendingShare;
+
+        // Build email body
+        let emailBody = '';
+        if (message) {
+            emailBody += message + '\n\n';
+        }
+        emailBody += `File: ${fileName}\n`;
+        emailBody += `Version: ${versionNumber} - ${versionMessage}\n\n`;
+        emailBody += '--- Content ---\n\n';
+        emailBody += content;
+
+        // Build mailto link
+        const subject = `${fileName} - Version ${versionNumber}`;
+        const mailtoLink = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+
+        // Open email client
+        window.location.href = mailtoLink;
+
+        // Close modal
+        shareModal.classList.add('hidden');
+        shareForm.reset();
+        pendingShare = null;
     });
 
     // Format date to relative format (Today, Yesterday, or full date)

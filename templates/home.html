@@ -179,14 +179,14 @@
                     >
                         Version message
                     </label>
-                    <textarea
+                    <input
+                        type="text"
                         id="version-message"
                         name="message"
-                        rows="3"
                         placeholder="e.g., Added new chapter, Fixed typos, Updated conclusion..."
-                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                        class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         required
-                    ></textarea>
+                    />
                 </div>
 
                 <div class="flex gap-3 pt-2">
@@ -412,8 +412,8 @@
                 return response.json();
             })
             .then(() => {
-                // Reload page to show updated preview
-                window.location.reload();
+                // Redirect to file timeline
+                window.location.href = `/files/${fileId}`;
             })
             .catch((error) => {
                 console.error("Error:", error);
