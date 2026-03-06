@@ -88,11 +88,20 @@ func SetupRoutes(app fiber.Router, db *sql.DB) {
 		if err := c.Bind().Body(&req); err != nil {
 			return err
 		}
+
+		if req.Path == "" || req.Content == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Path and Content are required"})
+		}
+
 		// 2. Appeler CreateFile
 		version, err := versioning.SaveVersion(db, c.Params("id"), req.Path, req.Author, req.Message, req.Content)
 		if err != nil {
-			return err
+			if err == versioning.ErrNotFound {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "file not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 		}
+
 		// 3. Retourner le résultat en JSON
 		return c.JSON(version)
 	})

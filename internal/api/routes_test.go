@@ -2,11 +2,13 @@ package api_test
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/Adriusops/zentxt/internal/api"
+	"github.com/Adriusops/zentxt/internal/versioning"
 	"github.com/gofiber/fiber/v3"
 	"github.com/stretchr/testify/assert"
 
@@ -104,4 +106,96 @@ func TestCreateFile_ErrorPath(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestSaveVersion_Success(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("/api/files/%s/versions", file.ID), strings.NewReader(`{"path": "/tmp/test.txt", "author": "You", "message": "Initial Commit", "content": "blablabla" }`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestSaveVersion_ErrorNoPath(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("/api/files/%s/versions", file.ID), strings.NewReader(`{"path": "", "author": "You", "message": "Initial Commit", "content": "blablabla" }`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestSaveVersion_ErrorNoContent(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	file, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("/api/files/%s/versions", file.ID), strings.NewReader(`{"path": "/tmp/test.txt", "author": "You", "message": "Initial Commit", "content": "" }`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestSaveVersion_ErrorInvalidFileID(t *testing.T) {
+	app, db := setupTestApp(t)
+
+	// Create file in db
+	_, err := versioning.CreateFile(db, "test.txt", "/tmp/test.txt", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", "/api/files/100/versions", strings.NewReader(`{"path": "/tmp/test.txt", "author": "You", "message": "Initial Commit", "content": "blablabla" }`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }

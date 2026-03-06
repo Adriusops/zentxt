@@ -30,10 +30,14 @@ func SaveVersion(db *sql.DB, fileID string, path string, author string, message 
 	id := uuid.New().String()
 	// 2. Insérer en DB avec db.Exec nouvelle version dans version
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM versions WHERE file_id = ?", fileID).Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM files WHERE id = ?", fileID).Scan(&count)
 	if err != nil {
 		return nil, err
 	}
+	if count == 0 {
+		return nil, ErrNotFound
+	}
+
 	_, err = db.Exec("INSERT INTO versions (id, file_id, version_number, path, author, message, content, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, fileID, count+1, path, author, message, content, time.Now().Format(time.RFC3339))
 	if err != nil {
 		return nil, err
