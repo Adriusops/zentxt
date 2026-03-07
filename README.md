@@ -65,6 +65,23 @@ No cloud. No configuration. No account required.
 
 ---
 
+## Roadmap
+
+### Diff management
+Currently, ZenTxt stores every version of your file — but choosing what to keep is still manual.
+The next step is to let you **review changes between two versions line by line**, accept or discard specific edits, and merge them into a new version — similar to resolving a conflict in Git.
+
+### Rich text format support
+ZenTxt currently supports `.txt` and `.md` files.
+Planned support for the most common text-based formats:
+
+- `.docx` — extract plain text from the OOXML structure (ZIP + XML), diff the content, ignore formatting metadata
+- `.odt` — same approach, LibreOffice's open format
+- `.rtf` — strip RTF tags, diff the underlying text
+- `.pdf` — on the roadmap but more complex: PDF is a rendering format, not an editing one. Text extraction is doable but imperfect; scanned PDFs would require OCR.
+
+---
+
 ## Philosophy
 
 zentxt does one thing well. It remembers your text files so you don't have to.
