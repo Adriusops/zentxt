@@ -3,8 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/Adriusops/zentxt"
 	"github.com/Adriusops/zentxt/internal/storage"
@@ -18,18 +17,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := zentxt.NewApp(db)
-
-	err = wails.Run(&options.App{
-		Title:  "zentxt",
-		Width:  1024,
-		Height: 768,
-		Bind: []interface{}{
-			app,
+	app := application.New(application.Options{
+		Name: "zentxt",
+		Services: []application.Service{
+			application.NewService(zentxt.NewApp(db)),
+		},
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(zentxt.Assets),
+		},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: "zentxt",
+		URL:   "/",
+	})
+
+	err = app.Run()
 }

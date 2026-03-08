@@ -2,3 +2,10 @@ zentxt
 zentxt.db
 .DS_Store
 tmp/
+node_modules/
+bin/
+frontend/dist/
+frontend/bindings/
+frontend/node_modules/
+.task/
+.tmp/

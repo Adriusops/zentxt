@@ -1,0 +1,60 @@
+/* ZenTxt Custom Styles - Monochrome Design */
+
+/* Color Palette:
+ * --zen-black: #232323 (main brand color)
+ * --zen-white: #ffffff
+ * Gray scale for UI elements
+ */
+
+:root {
+    --zen-black: #232323;
+    --zen-white: #ffffff;
+}
+
+/* Smooth transitions for interactive elements */
+* {
+    transition-property: color, background-color, border-color, transform, opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+}
+
+/* Focus styles for accessibility - monochrome */
+:focus-visible {
+    outline: 2px solid var(--zen-black);
+    outline-offset: 2px;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
