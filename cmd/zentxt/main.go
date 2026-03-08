@@ -20,7 +20,7 @@ func main() {
 	app := application.New(application.Options{
 		Name: "zentxt",
 		Services: []application.Service{
-			application.NewService(zentxt.NewApp(db)),
+			application.NewService(NewApp(db)),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(zentxt.Assets),
