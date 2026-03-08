@@ -1,35 +1,522 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/wails.png"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="/style.css"/>
-    <title>Wails App</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZenTxt</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap");
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: "Space Mono", monospace;
+        }
+
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
-<body>
-<div class="container">
-    <div>
-        <a data-wml-openURL="https://wails.io">
-            <img src="/wails.png" class="logo" alt="Wails logo"/>
-        </a>
-        <a data-wml-openURL="https://developer.mozilla.org/en-US/docs/Web/JavaScript">
-            <img src="/javascript.svg" class="logo vanilla" alt="JavaScript logo"/>
-        </a>
+<body class="bg-white text-gray-900 antialiased">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="border-b border-gray-100">
+            <div class="max-w-5xl mx-auto px-6 py-6">
+                <a
+                    href="index.html"
+                    class="inline-block hover:opacity-60 transition-opacity"
+                >
+                    <img
+                        src="/public/logo_combo.svg"
+                        alt="ZenTxt"
+                        class="h-12"
+                    />
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-5xl mx-auto px-6 py-12">
+            <div class="space-y-8">
+                <!-- Drag & Drop Zone -->
+                <div
+                    id="drop-zone"
+                    class="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer group"
+                >
+                    <div class="space-y-3">
+                        <svg
+                            class="mx-auto h-12 w-12 text-gray-300 group-hover:text-gray-600 transition-colors"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 48 48"
+                        >
+                            <path
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        <div>
+                            <p
+                                class="text-base font-medium text-gray-600 group-hover:text-[#232323] transition-colors"
+                            >
+                                Drop a file here to start tracking
+                            </p>
+                            <p class="text-sm text-gray-400 mt-1">
+                                Supports .txt and .md files
+                            </p>
+                        </div>
+                        <input
+                            type="file"
+                            id="file-input"
+                            accept=".txt,.md"
+                            class="hidden"
+                        />
+                    </div>
+                </div>
+
+                <!-- Files List -->
+                <div>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Your files</h2>
+
+                    <div
+                        id="files-list"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                        <!-- Files will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for version message -->
+            <div
+                id="version-modal"
+                class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden"
+            >
+                <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">
+                        Save new version
+                    </h3>
+                    <p class="text-sm text-gray-500 mb-6">
+                        Describe what changed in this version
+                    </p>
+
+                    <form id="version-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    for="version-message"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                >
+                                    Version message
+                                </label>
+                                <input
+                                    type="text"
+                                    id="version-message"
+                                    name="message"
+                                    placeholder="e.g., Added new chapter, Fixed typos, Updated conclusion..."
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    id="cancel-version"
+                                    class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                                >
+                                    Save version
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
-    <h1>Wails + Javascript</h1>
-    <div class="card">
-        <div aria-label="result" class="result" id="result">Please enter your name below 👇</div>
-        <div class="input-box" id="input">
-            <input aria-label="input" class="input" id="name" type="text" autocomplete="off"/>
-            <button aria-label="greet-btn" class="btn" onclick="doGreet()">Greet</button>
-        </div>
-    </div>
-    <div class="footer">
-        <div><p>Click on the Wails logo to learn more</p></div>
-        <div><p id="time">Listening for Time event...</p></div>
-    </div>
-</div>
-<script type="module" src="/src/main.js"></script>
+
+    <script type="module">
+        import { ListFiles, CreateFile, SaveVersion, ListVersions } from "./bindings/github.com/Adriusops/zentxt/cmd/zentxt/app.js";
+
+        // Format date to relative format (Today, Yesterday, or full date)
+        function formatRelativeDate(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffTime = now - date;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            const timeStr = date.toLocaleTimeString("fr-FR", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+
+            if (diffDays === 0) {
+                return `Today, ${timeStr}`;
+            } else if (diffDays === 1) {
+                return `Yesterday, ${timeStr}`;
+            } else {
+                return (
+                    date.toLocaleDateString("fr-FR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                    }) +
+                    ", " +
+                    timeStr
+                );
+            }
+        }
+
+        // Load and display files
+        async function loadFiles() {
+            try {
+                const files = await ListFiles();
+                const filesList = document.getElementById("files-list");
+
+                if (!files || files.length === 0) {
+                    filesList.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <p class="text-gray-400 text-sm">
+                                No files yet. Drop one above to get started.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filesList.innerHTML = "";
+
+                for (const file of files) {
+                    if (!file) continue;
+
+                    const card = createFileCard(file);
+                    filesList.appendChild(card);
+
+                    // Load preview for this file
+                    loadFilePreview(file.ID, card);
+                }
+
+                // Setup drop zones on cards
+                setupFileCardDropZones();
+            } catch (error) {
+                console.error("Error loading files:", error);
+                const filesList = document.getElementById("files-list");
+                filesList.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <p class="text-red-500 text-sm">
+                            Failed to load files. Please try again.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // Create file card HTML element
+        function createFileCard(file) {
+            const card = document.createElement("a");
+            card.className = "file-card block group";
+            card.dataset.fileId = file.ID;
+            card.href = `timeline.html?fileId=${file.ID}`;
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = `timeline.html?fileId=${file.ID}`;
+            });
+
+            card.innerHTML = `
+                <div class="file-drop-zone relative bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all border border-gray-200">
+                    <div class="bg-gray-50 p-8 pb-0 flex flex-col justify-end min-h-[240px] relative">
+                        <div class="mx-auto bg-white rounded-t-lg shadow-md overflow-hidden min-h-[200px] p-8 pb-12 relative border border-b-0 border-gray-300" style="max-width: 98%">
+                            <div class="absolute inset-0 pointer-events-none opacity-20">
+                                <div class="h-full flex flex-col justify-start pt-8 gap-[22px]">
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                    <div class="w-full h-[1px] bg-gray-400"></div>
+                                </div>
+                            </div>
+                            <div class="preview-content text-sm text-gray-900 line-clamp-4 leading-relaxed font-body relative z-10" style="line-height: 24px">
+                                <span class="text-gray-400 italic">Loading preview...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white px-8 py-6 relative z-20 -mt-8">
+                        <h3 class="text-base font-bold text-gray-900 mb-2 font-display">
+                            ${file.Name}
+                        </h3>
+                        <p class="text-sm text-gray-400 timestamp">
+                            ${formatRelativeDate(file.CreatedAt)}
+                        </p>
+                    </div>
+                    <div class="drop-overlay absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-30">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-900 mb-3" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M24 8v24m0 0l-8-8m8 8l8-8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="text-gray-900 font-medium text-sm">
+                                Drop to save new version
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Load preview for a file
+        async function loadFilePreview(fileId, card) {
+            const previewElement = card.querySelector(".preview-content");
+
+            try {
+                const versions = await ListVersions(fileId);
+
+                if (versions && versions.length > 0) {
+                    const latestVersion = versions[0];
+                    const content = latestVersion?.Content || "";
+
+                    if (content) {
+                        const lines = content.split("\n").slice(0, 4);
+                        const preview = lines.join("\n").substring(0, 200);
+                        previewElement.textContent = preview + (content.length > 200 ? "..." : "");
+                        previewElement.classList.remove("text-gray-400", "italic");
+                    } else {
+                        previewElement.innerHTML = '<span class="text-gray-400 italic">Empty file</span>';
+                    }
+                } else {
+                    previewElement.innerHTML = '<span class="text-gray-400 italic">No versions yet</span>';
+                }
+            } catch (error) {
+                console.error("Error loading preview:", error);
+                previewElement.innerHTML = '<span class="text-gray-400 italic">Failed to load preview</span>';
+            }
+        }
+
+        // Drag & Drop functionality
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+
+        // Click to browse
+        dropZone.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        // Prevent default drag behaviors
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when dragging
+        ["dragenter", "dragover"].forEach((eventName) => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add("border-gray-400", "bg-gray-50");
+            });
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove("border-gray-400", "bg-gray-50");
+            });
+        });
+
+        // Handle dropped files
+        dropZone.addEventListener("drop", (e) => {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Handle file input change
+        fileInput.addEventListener("change", (e) => {
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        // Modal management
+        const modal = document.getElementById("version-modal");
+        const versionForm = document.getElementById("version-form");
+        const versionMessageInput = document.getElementById("version-message");
+        const cancelButton = document.getElementById("cancel-version");
+
+        let pendingVersionData = null;
+
+        function showModal() {
+            modal.classList.remove("hidden");
+            versionMessageInput.value = "";
+            versionMessageInput.focus();
+        }
+
+        function hideModal() {
+            modal.classList.add("hidden");
+            pendingVersionData = null;
+        }
+
+        cancelButton.addEventListener("click", hideModal);
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                hideModal();
+            }
+        });
+
+        // Handle form submission
+        versionForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (!pendingVersionData) return;
+
+            const message = versionMessageInput.value.trim();
+            if (!message) return;
+
+            const { fileId, content, fileName } = pendingVersionData;
+
+            try {
+                await SaveVersion(fileId, fileName, "You", message, content);
+                window.location.href = `timeline.html?fileId=${fileId}`;
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to save new version. Please try again.");
+                hideModal();
+            }
+        });
+
+        // Drag & Drop on file cards to create new version
+        function setupFileCardDropZones() {
+            const fileCards = document.querySelectorAll(".file-card");
+
+            fileCards.forEach((card) => {
+                const dropZoneEl = card.querySelector(".file-drop-zone");
+                const overlay = card.querySelector(".drop-overlay");
+
+                ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+                    dropZoneEl.addEventListener(
+                        eventName,
+                        (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        },
+                        false,
+                    );
+                });
+
+                let dragCounter = 0;
+
+                dropZoneEl.addEventListener("dragenter", (e) => {
+                    dragCounter++;
+                    overlay.classList.remove("opacity-0");
+                    overlay.classList.add("opacity-100", "pointer-events-auto");
+                });
+
+                dropZoneEl.addEventListener("dragover", (e) => {
+                    overlay.classList.remove("opacity-0");
+                    overlay.classList.add("opacity-100", "pointer-events-auto");
+                });
+
+                dropZoneEl.addEventListener("dragleave", (e) => {
+                    dragCounter--;
+                    if (dragCounter === 0) {
+                        overlay.classList.add("opacity-0");
+                        overlay.classList.remove("opacity-100", "pointer-events-auto");
+                    }
+                });
+
+                dropZoneEl.addEventListener("drop", (e) => {
+                    dragCounter = 0;
+                    overlay.classList.add("opacity-0");
+                    overlay.classList.remove("opacity-100", "pointer-events-auto");
+
+                    const files = e.dataTransfer.files;
+                    if (files.length === 0) return;
+
+                    const file = files[0];
+                    const fileId = card.dataset.fileId;
+
+                    const fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith(".txt") && !fileName.endsWith(".md")) {
+                        alert(
+                            "ZenTxt only supports .txt and .md files.\\n\\nPlease convert your document to plain text before uploading.",
+                        );
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const content = e.target.result;
+
+                        pendingVersionData = {
+                            fileId: fileId,
+                            content: content,
+                            fileName: file.name,
+                        };
+
+                        showModal();
+                    };
+                    reader.readAsText(file);
+                });
+            });
+        }
+
+        // Process uploaded file
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith(".txt") && !fileName.endsWith(".md")) {
+                alert(
+                    "ZenTxt only supports .txt and .md files.\\n\\nPlease convert your document to plain text before uploading.",
+                );
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = async function (e) {
+                const content = e.target.result;
+
+                try {
+                    const newFile = await CreateFile(file.name, file.name);
+
+                    if (newFile) {
+                        await SaveVersion(newFile.ID, file.name, "You", "Initial version", content);
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Failed to add file. Please try again.");
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Load files on page load
+        document.addEventListener("DOMContentLoaded", loadFiles);
+    </script>
 </body>
 </html>
