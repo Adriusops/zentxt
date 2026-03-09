@@ -293,7 +293,7 @@
     </div>
 
     <script type="module">
-        import { GetFile, ListVersions, SaveVersion, RestoreVersion, DeleteVersion, GetVersion } from "./bindings/github.com/Adriusops/zentxt/cmd/zentxt/app.js";
+        import { GetFile, ListVersions, SaveVersion, RestoreVersion, DeleteVersion, GetVersion, ExportVersion } from "./bindings/github.com/Adriusops/zentxt/cmd/zentxt/app.js";
         import * as Dialog from "./node_modules/@wailsio/runtime/dist/dialogs.js";
 
         // Get fileId from URL
@@ -591,46 +591,42 @@
             console.log('Download version called with:', { versionId, versionNumber });
 
             try {
-                console.log('Fetching version...');
-                const version = await GetVersion(versionId);
-                console.log('Version fetched:', version);
-
-                const content = version?.Content || '';
-
-                if (!content) {
-                    await Dialog.Error({
-                        title: 'Export failed',
-                        message: 'No content available to download.'
-                    });
-                    return;
-                }
-
                 const extension = currentFile.Name.match(/\.[^/.]+$/);
                 const ext = extension ? extension[0] : '.txt';
                 const nameWithoutExt = currentFile.Name.replace(/\.[^/.]+$/, '');
                 const defaultFilename = `${nameWithoutExt}-v${versionNumber}${ext}`;
 
-                console.log('Creating download with filename:', defaultFilename);
+                console.log('Opening save dialog with:', defaultFilename);
 
-                // Create download using blob (works in Wails desktop app)
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = defaultFilename;
-                a.style.display = 'none';
-                document.body.appendChild(a);
+                // Show native save file dialog
+                const filePath = await Dialog.SaveFile({
+                    title: 'Export version',
+                    filename: defaultFilename,
+                    defaultFilename: defaultFilename,
+                    defaultFileName: defaultFilename,
+                    filters: [
+                        { displayName: 'Text files', pattern: '*.txt' },
+                        { displayName: 'Markdown files', pattern: '*.md' },
+                        { displayName: 'All files', pattern: '*.*' }
+                    ]
+                });
 
-                console.log('Triggering download...');
-                a.click();
+                console.log('Selected file path:', filePath);
 
-                // Cleanup
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                }, 100);
+                if (!filePath) {
+                    console.log('User cancelled save dialog');
+                    return;
+                }
 
-                console.log('Download triggered successfully');
+                console.log('Calling ExportVersion...');
+                await ExportVersion(versionId, filePath);
+
+                console.log('File exported successfully');
+
+                await Dialog.Info({
+                    title: 'Export successful',
+                    message: `Version exported successfully to:\n${filePath}`
+                });
             } catch (error) {
                 console.error('Error downloading version:', error);
                 await Dialog.Error({
