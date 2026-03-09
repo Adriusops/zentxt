@@ -2,6 +2,7 @@ package versioning
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -103,18 +104,7 @@ func RestoreVersion(db *sql.DB, fileID string, versionID string) (*Version, erro
 	if err != nil {
 		return nil, err
 	}
-
-	currentFile, err := GetFile(db, fileID)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = db.Exec("UPDATE files SET current_version_id = ? WHERE id = ?", currentVersion.ID, currentFile.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return currentVersion, nil
+	return SaveVersion(db, fileID, currentVersion.Path, currentVersion.Author, fmt.Sprintf("Restored from version %d", currentVersion.VersionNumber), currentVersion.Content)
 }
 
 func ListVersionsWithPrev(db *sql.DB, fileID string) ([]*VersionWithPrev, error) {
