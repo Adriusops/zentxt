@@ -30,6 +30,9 @@ jobs:
         env:
           CGO_ENABLED: 1
 
+      - name: Find build output
+        run: find . -name "*.app" -type d 2>/dev/null || echo "No .app found"
+
       - name: Zip .app bundle
         run: zip -r zentxt-mac.zip bin/zentxt.app
 
