@@ -3,13 +3,26 @@ package storage
 import (
 	"database/sql"
 	"embed"
+	"os"
 	"path"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
 
 func InitDB(migrationsFS embed.FS) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "zentxt.db")
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return nil, err
+	}
+
+	appDir := filepath.Join(configDir, "zentxt")
+	if err := os.MkdirAll(appDir, 0755); err != nil {
+		return nil, err
+	}
+
+	dbPath := filepath.Join(appDir, "zentxt.db")
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
 	}

@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=My Product
-Comment=A test application
+Name=zentxt
+Comment=A program that does X
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/test %u
+Exec=/usr/local/bin/zentxt %u
 Terminal=false
 Type=Application
-Icon=test
+Icon=zentxt
 Categories=Utility;
-StartupWMClass=test
+StartupWMClass=zentxt
 
  

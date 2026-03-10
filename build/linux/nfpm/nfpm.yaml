@@ -3,26 +3,26 @@
 #
 # The lines below are called `modelines`. See `:help modeline`
 
-name: "test"
+name: "zentxt"
 arch: ${GOARCH}
 platform: "linux"
-version: "0.1.0"
+version: "0.0.1"
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
-description: "A test application"
-vendor: "My Company"
+description: "A program that does X"
+vendor: "zentxt"
 homepage: "https://wails.io"
 license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/test"
-    dst: "/usr/local/bin/test"
+  - src: "./bin/zentxt"
+    dst: "/usr/local/bin/zentxt"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/test.png"
-  - src: "./build/linux/test.desktop"
-    dst: "/usr/share/applications/test.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/zentxt.png"
+  - src: "./build/linux/zentxt.desktop"
+    dst: "/usr/share/applications/zentxt.desktop"
 
 # Default dependencies for Debian 12/Ubuntu 22.04+ with WebKit 4.1
 depends:
