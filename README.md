@@ -15,6 +15,7 @@ Download the latest release for your platform → [GitHub Releases](https://gith
 Double-click to open. That's it.
 
 > **macOS users** — if macOS blocks the app on first launch, go to System Settings → Privacy & Security → "Open Anyway".
+> - Or run this command in Terminal: `xattr -cr /path/to/zentxt.app`
 
 > **Windows users** — if SmartScreen warns you, click "More info" → "Run anyway".
 
