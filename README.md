@@ -10,56 +10,35 @@ No branches. No jargon. Just your files, with a memory.
 
 ## Getting started
 
+Download the latest release for your platform → [GitHub Releases](https://github.com/Adriusops/zentxt/releases)
+
+Double-click to open. That's it.
+
+> **macOS users** — if macOS blocks the app on first launch, go to System Settings → Privacy & Security → "Open Anyway".
+
+> **Windows users** — if SmartScreen warns you, click "More info" → "Run anyway".
+
+---
+
+## For developers
+
 ```bash
 git clone https://github.com/Adriusops/zentxt
 cd zentxt
-go run ./cmd/zentxt/
+wails3 dev
 ```
-
-Open `http://localhost:3000` — that's it.
-
-**With Docker**
-```bash
-docker build -t zentxt .
-docker run -p 3000:3000 zentxt
-```
-
-**With hot reload (recommended for development)**
-```bash
-go install github.com/air-verse/air@latest
-air
-```
-
-Your API is now running at `http://localhost:3000`.
-
----
-
-## API
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/files` | List all tracked files |
-| `POST` | `/files` | Track a new file |
-| `GET` | `/files/:id` | Get a file |
-| `POST` | `/files/:id/versions` | Save a new version |
-| `GET` | `/files/:id/versions` | List all versions |
-| `GET` | `/files/:id/versions/:version_id` | Get a specific version |
-| `GET` | `/files/:id/diff?v1=&v2=` | Compare two versions |
-| `PATCH` | `/files/:id/restore/:version_id` | Restore a version |
-
----
 
 ## Stack
 
-**Backend** — [Go](https://golang.org) with [Fiber v3](https://gofiber.io). Fast, minimal, a single binary. No runtime dependencies.
+**Backend** — Go with Wails v3. A single native binary, no runtime dependencies.
 
-**Database** — [SQLite](https://sqlite.org) via [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite). Local-first by design — your data stays on your machine, in a single file.
+**Database** — SQLite via modernc.org/sqlite. Local-first by design — your data stays on your machine, in a single file.
 
-**Diff engine** — [go-diff](https://github.com/sergi/go-diff). Computes character-level diffs between versions on the fly, no storage overhead.
+**Frontend** — Vanilla JS + Vite. Fast, minimal, no framework overhead.
 
-**Containerization** — Docker with a multi-stage build. The final image is under 20MB.
+**Diff engine** — go-diff. Computes character-level diffs between versions on the fly, no storage overhead.
 
-**CI** — GitHub Actions. Every push to `main` compiles the project and runs the test suite automatically.
+**CI/CD** — GitHub Actions. Every push to `main` compiles the project and runs the test suite automatically. Every tag ships cross-platform binaries for Mac, Windows and Linux.
 
 No cloud. No configuration. No account required.
 
