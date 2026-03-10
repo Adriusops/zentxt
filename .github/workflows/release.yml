@@ -30,11 +30,14 @@ jobs:
         env:
           CGO_ENABLED: 1
 
-      - name: Find build output
-        run: find . -name "*.app" -type d 2>/dev/null || echo "No .app found"
-
-      - name: Zip .app bundle
-        run: zip -r zentxt-mac.zip bin/zentxt.app
+      - name: Package .app bundle
+        run: |
+          mkdir -p zentxt.app/Contents/MacOS
+          mkdir -p zentxt.app/Contents/Resources
+          cp bin/zentxt zentxt.app/Contents/MacOS/zentxt
+          cp build/darwin/icons.icns zentxt.app/Contents/Resources/icons.icns
+          cp build/darwin/Info.plist zentxt.app/Contents/Info.plist
+          zip -r zentxt-mac.zip zentxt.app
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
