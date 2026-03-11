@@ -152,7 +152,7 @@
 
             <!-- Modal for version message -->
             <div
-                id="version-modal"
+                id="home-version-modal"
                 class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden"
             >
                 <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
@@ -199,6 +199,111 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- DIFF VIEW -->
+        <main id="diff-view" class="max-w-5xl mx-auto px-6 py-12 hidden">
+            <div class="space-y-8">
+                <!-- Header -->
+                <div>
+                    <a id="diff-back-link" href="#" class="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center mb-2">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to timeline
+                    </a>
+                    <h1 class="text-3xl font-light text-[#232323] mb-2">Comparing versions</h1>
+                    <p id="diff-file-name" class="text-sm text-gray-400">Loading...</p>
+                </div>
+
+                <!-- Version Info -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="inline-block px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded border border-gray-200">
+                                Before
+                            </span>
+                            <span id="version1-message" class="text-sm font-medium text-[#232323]">Loading...</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-gray-400">
+                            <span id="version1-author">-</span>
+                            <span>•</span>
+                            <span id="version1-date">-</span>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="inline-block px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded border border-gray-200">
+                                After
+                            </span>
+                            <span id="version2-message" class="text-sm font-medium text-[#232323]">Loading...</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-gray-400">
+                            <span id="version2-author">-</span>
+                            <span>•</span>
+                            <span id="version2-date">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Toggle -->
+                <div class="flex items-center gap-2">
+                    <button
+                        id="unified-btn"
+                        class="px-4 py-2 bg-[#232323] text-white rounded-lg text-sm font-medium transition-opacity">
+                        Unified
+                    </button>
+                    <button
+                        id="split-btn"
+                        class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                        Side by side
+                    </button>
+                </div>
+
+                <!-- Diff Content - Unified View -->
+                <div id="unified-view" class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <span class="text-xs font-medium text-gray-600">Changes</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm font-mono">
+                            <tbody id="unified-tbody">
+                                <!-- Diff will be rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Diff Content - Split View -->
+                <div id="split-view" class="hidden grid grid-cols-2 gap-4">
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span class="text-xs font-medium text-gray-600">Before</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm font-mono">
+                                <tbody id="split-before-tbody">
+                                    <!-- Before diff will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span class="text-xs font-medium text-gray-600">After</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm font-mono">
+                                <tbody id="split-after-tbody">
+                                    <!-- After diff will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

@@ -7,7 +7,8 @@ import {
     GetVersion,
     RestoreVersion,
     DeleteVersion,
-    ExportVersion
+    ExportVersion,
+    GenerateDiff
 } from "./bindings/github.com/Adriusops/zentxt/cmd/zentxt/app.js";
 import * as Dialog from "./node_modules/@wailsio/runtime/dist/dialogs.js";
 
@@ -39,6 +40,16 @@ function handleRoute() {
         } else {
             showHome();
         }
+    } else if (route === 'diff' && queryString) {
+        const params = new URLSearchParams(queryString);
+        const fileId = params.get('fileId');
+        const v1 = params.get('v1');
+        const v2 = params.get('v2');
+        if (fileId && v1 && v2) {
+            showDiff(fileId, v1, v2);
+        } else {
+            showHome();
+        }
     } else {
         showHome();
     }
@@ -47,14 +58,39 @@ function handleRoute() {
 function showHome() {
     document.getElementById('home-view').classList.remove('hidden');
     document.getElementById('timeline-view').classList.add('hidden');
+    document.getElementById('diff-view').classList.add('hidden');
     loadFiles();
 }
 
 function showTimeline(fileId) {
+    console.log('[DEBUG] showTimeline called with fileId:', fileId);
+    currentFileId = fileId;
+
+    const homeView = document.getElementById('home-view');
+    const timelineView = document.getElementById('timeline-view');
+
+    console.log('[DEBUG] homeView:', homeView);
+    console.log('[DEBUG] timelineView:', timelineView);
+
+    if (!homeView || !timelineView) {
+        console.error('[DEBUG] Views not found!');
+        return;
+    }
+
+    homeView.classList.add('hidden');
+    timelineView.classList.remove('hidden');
+    document.getElementById('diff-view').classList.add('hidden');
+
+    console.log('[DEBUG] Views toggled, loading timeline...');
+    loadTimeline(fileId);
+}
+
+function showDiff(fileId, v1, v2) {
     currentFileId = fileId;
     document.getElementById('home-view').classList.add('hidden');
-    document.getElementById('timeline-view').classList.remove('hidden');
-    loadTimeline(fileId);
+    document.getElementById('timeline-view').classList.add('hidden');
+    document.getElementById('diff-view').classList.remove('hidden');
+    loadDiff(fileId, v1, v2);
 }
 
 function navigateTo(route) {
@@ -265,7 +301,7 @@ function initHomeDragDrop() {
 
 // Modal management
 function initHomeModal() {
-    const modal = document.getElementById("version-modal");
+    const modal = document.getElementById("home-version-modal");
     const versionForm = document.getElementById("version-form");
     const versionMessageInput = document.getElementById("version-message");
     const cancelButton = document.getElementById("cancel-version");
@@ -433,11 +469,19 @@ async function handleFiles(files) {
 // ======================
 
 async function loadTimeline(fileId) {
+    console.log('[DEBUG] loadTimeline called with fileId:', fileId);
+
     try {
+        console.log('[DEBUG] Calling GetFile...');
         const file = await GetFile(fileId);
+        console.log('[DEBUG] GetFile result:', file);
+
+        console.log('[DEBUG] Calling ListVersions...');
         const versions = await ListVersions(fileId);
+        console.log('[DEBUG] ListVersions result:', versions);
 
         if (!file) {
+            console.error('[DEBUG] No file found, navigating to home');
             navigateTo('home');
             return;
         }
@@ -445,14 +489,21 @@ async function loadTimeline(fileId) {
         currentFile = file;
         currentVersions = versions || [];
 
-        document.getElementById('file-name').textContent = file.Name;
+        const fileNameElement = document.getElementById('file-name');
+        console.log('[DEBUG] file-name element:', fileNameElement);
 
+        if (fileNameElement) {
+            fileNameElement.textContent = file.Name;
+        }
+
+        console.log('[DEBUG] Calling renderTimeline...');
         renderTimeline();
+        console.log('[DEBUG] Timeline rendered successfully');
     } catch (error) {
-        console.error('Error loading timeline:', error);
+        console.error('[DEBUG] Error loading timeline:', error);
         await Dialog.Error({
             title: 'Error',
-            message: 'Failed to load file timeline. Please try again.'
+            message: 'Failed to load file timeline. Please try again.\n\nError: ' + error.message
         });
         navigateTo('home');
     }
@@ -732,7 +783,7 @@ async function downloadVersion(versionId, versionNumber) {
 
 // Compare versions
 function compareVersions(v1, v2) {
-    window.location.href = `diff.html?fileId=${currentFileId}&v1=${v1}&v2=${v2}`;
+    navigateTo(`diff?fileId=${currentFileId}&v1=${v1}&v2=${v2}`);
 }
 
 // Restore version
@@ -1040,6 +1091,213 @@ function initTimelineModals() {
 }
 
 // ======================
+// DIFF VIEW
+// ======================
+
+async function loadDiff(fileId, v1Id, v2Id) {
+    try {
+        const file = await GetFile(fileId);
+        const version1 = await GetVersion(v1Id);
+        const version2 = await GetVersion(v2Id);
+        const diff = await GenerateDiff(v1Id, v2Id);
+
+        if (!file || !version1 || !version2 || !diff) {
+            await Dialog.Error({
+                title: 'Error',
+                message: 'Failed to load diff data.'
+            });
+            navigateTo(`timeline?fileId=${fileId}`);
+            return;
+        }
+
+        currentFile = file;
+
+        // Set back link
+        document.getElementById('diff-back-link').href = `#timeline?fileId=${fileId}`;
+
+        // Update UI
+        document.getElementById('diff-file-name').textContent = file.Name;
+        document.getElementById('version1-message').textContent = version1.Message;
+        document.getElementById('version1-author').textContent = version1.Author;
+        document.getElementById('version1-date').textContent = new Date(version1.CreatedAt).toLocaleDateString('fr-FR');
+        document.getElementById('version2-message').textContent = version2.Message;
+        document.getElementById('version2-author').textContent = version2.Author;
+        document.getElementById('version2-date').textContent = new Date(version2.CreatedAt).toLocaleDateString('fr-FR');
+
+        renderUnifiedDiff(diff);
+        renderSplitDiff(diff);
+    } catch (error) {
+        console.error('Error loading diff:', error);
+        await Dialog.Error({
+            title: 'Error',
+            message: 'Failed to load diff. Please try again.'
+        });
+        navigateTo(`timeline?fileId=${fileId}`);
+    }
+}
+
+function renderUnifiedDiff(diff) {
+    const tbody = document.getElementById('unified-tbody');
+
+    if (!diff || diff.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="2" class="px-4 py-8 text-center text-gray-400">No changes detected</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = diff.map(item => {
+        const type = item.Type;
+        const text = escapeHtml(item.Text);
+
+        if (type === 0) {
+            // Equal
+            return `
+                <tr class="hover:bg-gray-50">
+                    <td class="w-12 px-3 py-1 text-right text-gray-400 border-r border-gray-200 bg-gray-50 select-none"></td>
+                    <td class="px-4 py-1 text-gray-700">${text}</td>
+                </tr>
+            `;
+        } else if (type === -1) {
+            // Delete
+            return `
+                <tr class="bg-red-50 hover:bg-red-100">
+                    <td class="w-12 px-3 py-1 text-right text-red-600 border-r border-red-200 bg-red-100 select-none font-medium">-</td>
+                    <td class="px-4 py-1 text-red-700">${text}</td>
+                </tr>
+            `;
+        } else if (type === 1) {
+            // Insert
+            return `
+                <tr class="bg-green-50 hover:bg-green-100">
+                    <td class="w-12 px-3 py-1 text-right text-green-600 border-r border-green-200 bg-green-100 select-none font-medium">+</td>
+                    <td class="px-4 py-1 text-green-700">${text}</td>
+                </tr>
+            `;
+        }
+        return '';
+    }).join('');
+}
+
+function renderSplitDiff(diff) {
+    const beforeTbody = document.getElementById('split-before-tbody');
+    const afterTbody = document.getElementById('split-after-tbody');
+
+    if (!diff || diff.length === 0) {
+        beforeTbody.innerHTML = `
+            <tr>
+                <td colspan="2" class="px-4 py-8 text-center text-gray-400">No changes</td>
+            </tr>
+        `;
+        afterTbody.innerHTML = `
+            <tr>
+                <td colspan="2" class="px-4 py-8 text-center text-gray-400">No changes</td>
+            </tr>
+        `;
+        return;
+    }
+
+    beforeTbody.innerHTML = diff.map(item => {
+        const type = item.Type;
+        const text = escapeHtml(item.Text);
+
+        if (type === 0 || type === -1) {
+            // Equal or Delete
+            const rowClass = type === -1 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50';
+            const cellClass = type === -1 ? 'text-red-600 bg-red-100 border-r border-red-200' : 'text-gray-400 bg-gray-50 border-r border-gray-200';
+            const textClass = type === -1 ? 'text-red-700' : 'text-gray-700';
+            const marker = type === -1 ? '-' : '';
+            const fontWeight = type === -1 ? 'font-medium' : '';
+
+            return `
+                <tr class="${rowClass}">
+                    <td class="w-12 px-3 py-1 text-right ${cellClass} select-none ${fontWeight}">
+                        ${marker}
+                    </td>
+                    <td class="px-4 py-1 ${textClass}">${text}</td>
+                </tr>
+            `;
+        } else {
+            // Insert - show empty row
+            return `
+                <tr class="bg-gray-100">
+                    <td class="w-12 px-3 py-1 bg-gray-200 border-r border-gray-300"></td>
+                    <td class="px-4 py-1"></td>
+                </tr>
+            `;
+        }
+    }).join('');
+
+    afterTbody.innerHTML = diff.map(item => {
+        const type = item.Type;
+        const text = escapeHtml(item.Text);
+
+        if (type === 0 || type === 1) {
+            // Equal or Insert
+            const rowClass = type === 1 ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-gray-50';
+            const cellClass = type === 1 ? 'text-green-600 bg-green-100 border-r border-green-200' : 'text-gray-400 bg-gray-50 border-r border-gray-200';
+            const textClass = type === 1 ? 'text-green-700' : 'text-gray-700';
+            const marker = type === 1 ? '+' : '';
+            const fontWeight = type === 1 ? 'font-medium' : '';
+
+            return `
+                <tr class="${rowClass}">
+                    <td class="w-12 px-3 py-1 text-right ${cellClass} select-none ${fontWeight}">
+                        ${marker}
+                    </td>
+                    <td class="px-4 py-1 ${textClass}">${text}</td>
+                </tr>
+            `;
+        } else {
+            // Delete - show empty row
+            return `
+                <tr class="bg-gray-100">
+                    <td class="w-12 px-3 py-1 bg-gray-200 border-r border-gray-300"></td>
+                    <td class="px-4 py-1"></td>
+                </tr>
+            `;
+        }
+    }).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function initDiffViewToggle() {
+    const unifiedBtn = document.getElementById('unified-btn');
+    const splitBtn = document.getElementById('split-btn');
+    const unifiedView = document.getElementById('unified-view');
+    const splitView = document.getElementById('split-view');
+
+    unifiedBtn.addEventListener('click', () => {
+        unifiedView.classList.remove('hidden');
+        splitView.classList.add('hidden');
+
+        unifiedBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        unifiedBtn.classList.add('bg-[#232323]', 'text-white');
+
+        splitBtn.classList.remove('bg-[#232323]', 'text-white');
+        splitBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+    });
+
+    splitBtn.addEventListener('click', () => {
+        unifiedView.classList.add('hidden');
+        splitView.classList.remove('hidden');
+
+        splitBtn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        splitBtn.classList.add('bg-[#232323]', 'text-white');
+
+        unifiedBtn.classList.remove('bg-[#232323]', 'text-white');
+        unifiedBtn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+    });
+}
+
+// ======================
 // INIT
 // ======================
 
@@ -1049,4 +1307,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initHomeModal();
     initTimelineEventHandlers();
     initTimelineModals();
+    initDiffViewToggle();
 });
